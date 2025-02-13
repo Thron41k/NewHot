@@ -1,0 +1,6 @@
+#define STEPPER_IN1 19
+#define STEPPER_IN2 18
+#define STEPPER_IN3 5
+#define STEPPER_IN4 17
+#define STEPPER_LIMSW_X 6
+#define TEMPERATURE_SENSOR 4

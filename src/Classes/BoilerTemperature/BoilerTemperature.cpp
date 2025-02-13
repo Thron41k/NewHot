@@ -1,7 +1,7 @@
 #include "BoilerTemperature.h"
 
 BoilerTemperature::BoilerTemperature(Logger logger)
-    : _logger(logger), _ds(std::make_unique<GyverDS18Single>(4))
+    : _logger(logger), _ds(std::make_unique<GyverDS18Single>(TEMPERATURE_SENSOR))
 {
 }
 

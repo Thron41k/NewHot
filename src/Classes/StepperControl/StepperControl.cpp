@@ -1,13 +1,17 @@
 #include "StepperControl.h"
 
-StepperControl::StepperControl() {
-  pinMode(LIMSW_X, INPUT_PULLUP);
-  _stepper = std::make_unique<GStepper2<STEPPER4WIRE>>(stepsPerRevolution, IN1, IN2, IN3, IN4);
+StepperControl::StepperControl()
+{
+  pinMode(STEPPER_LIMSW_X, INPUT_PULLUP);
+  _stepper = std::make_unique<GStepper2<STEPPER4WIRE>>(stepsPerRevolution, STEPPER_IN1, STEPPER_IN2, STEPPER_IN3, STEPPER_IN4);
   Homing();
 }
 
-void StepperControl::GoToPosition(int position) {
-  if (!inHome || position < 0 || position > maxPosition) {
+void StepperControl::GoToPositionByPercent(short percent)
+{
+  int position = maxPosition * percent / 100;
+  if (!inHome || position < 0 || position > maxPosition)
+  {
     return;
   }
   _stepper->setMaxSpeed(100);
@@ -16,24 +20,35 @@ void StepperControl::GoToPosition(int position) {
   xTaskCreatePinnedToCore(StartGoToPositionTaskImpl, "GoToPosition", 10000, this, 1, NULL, 1);
 }
 
-void StepperControl::Homing() {
+void StepperControl::Homing()
+{
   xTaskCreatePinnedToCore(StartHomingTaskImpl, "Homing", 10000, this, 1, NULL, 1);
 }
 
-void StepperControl::StartGoToPositionTask() {
-  while (!_stepper->ready()) {
+void StepperControl::StartGoToPositionTask()
+{
+  while (!_stepper->ready())
+  {
     _stepper->tick();
   }
 }
 
-void StepperControl::StartHomingTask() {
-  if (digitalRead(LIMSW_X)) {
+void StepperControl::StartHomingTask()
+{
+  if (digitalRead(STEPPER_LIMSW_X))
+  {
     _stepper->setSpeed(-10.0);
-    while (digitalRead(LIMSW_X)) {
+    while (digitalRead(STEPPER_LIMSW_X))
+    {
       _stepper->tick();
     }
     _stepper->brake();
   }
   inHome = true;
   _stepper->reset();
+}
+
+short StepperControl::GetCurrentPercent()
+{
+  return 100 * _stepper->pos / maxPosition;
 }

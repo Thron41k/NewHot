@@ -2,6 +2,7 @@
 #include <memory>
 #include <algorithm>
 #include <Classes/Helpers/Logger.h>
+#include <Classes/Helpers/Pins.h>
 
 class BoilerTemperature
 {
