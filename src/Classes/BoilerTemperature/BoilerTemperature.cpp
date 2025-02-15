@@ -12,7 +12,12 @@ void BoilerTemperature::Loop()
         _tmr = millis();
         if (_ds->readTemp())
         {
-            _temp = _ds->getTemp();
+            float tmp_temp = _ds->getTemp();
+            if (_temp != tmp_temp)
+            {
+                NotifyObservers();
+                _temp = tmp_temp;
+            }
         }
         else
         {
@@ -23,4 +28,22 @@ void BoilerTemperature::Loop()
             _logger.Error("DS18B20 requestTemp error");
         }
     }
+}
+
+void BoilerTemperature::NotifyObservers()
+{
+    for (auto observer : observers)
+    {
+        observer->Update();
+    }
+}
+
+void BoilerTemperature::Attach(IObserver *observer)
+{
+    observers.push_back(observer);
+}
+
+void BoilerTemperature::Detach(IObserver *observer)
+{
+    observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
 }
