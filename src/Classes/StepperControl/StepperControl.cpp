@@ -3,14 +3,14 @@
 StepperControl::StepperControl()
 {
   pinMode(STEPPER_LIMSW_X, INPUT_PULLUP);
-  _stepper = std::make_unique<GStepper2<STEPPER4WIRE>>(stepsPerRevolution, STEPPER_IN1, STEPPER_IN2, STEPPER_IN3, STEPPER_IN4);
+  _stepper = std::make_unique<GStepper2<STEPPER4WIRE>>(STEPS_PER_REVOLUTION, STEPPER_IN1, STEPPER_IN2, STEPPER_IN3, STEPPER_IN4);
   Homing();
 }
 
 void StepperControl::GoToPositionByPercent(short percent)
 {
-  int position = maxPosition * percent / 100;
-  if (!inHome || position < 0 || position > maxPosition)
+  int position = MAX_POSITION * percent / 100;
+  if (!inHome || position < 0 || position > MAX_POSITION)
   {
     return;
   }
@@ -50,5 +50,5 @@ void StepperControl::StartHomingTask()
 
 short StepperControl::GetCurrentPercent()
 {
-  return 100 * _stepper->pos / maxPosition;
+  return 100 * _stepper->pos / MAX_POSITION;
 }

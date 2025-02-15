@@ -1,4 +1,5 @@
 #include "DeviceConfig.h"
+#include <Classes/Helpers/Defines.h>
 
 void DeviceConfig::LoadConfig()
 {
@@ -7,43 +8,52 @@ void DeviceConfig::LoadConfig()
     EEPROM.end();
     if (_config.device_uid != _device_uid)
     {
-        SaveConfig(true);
+        _config = Configuration();
+        SaveConfig();
     }
 }
 
-void DeviceConfig::SaveConfig(bool newConfig = false)
+void DeviceConfig::SaveConfig()
 {
-    if (newConfig)
-    {
-        _config = Configuration();
-    }
     EEPROM.begin(4096);
     EEPROM.put(0, _config);
     EEPROM.end();
 }
 
-template <typename T, ParametreType>
+template <typename T>
 void DeviceConfig::SetParametre(T value, ParametreType type)
 {
     switch (type)
     {
-    case ModeType:
-        _config.mode = static_cast<ModeType>(value);
+    case Mode:
+        _config.mode = value;
         break;
     case BoilerMaxTemp:
-        _config.boilerMaxTemp = static_cast<float>(value);
+        _config.boilerMaxTemp = value;
         break;
     case HomeTargetTemp:
-        _config.homeTargetTemp = static_cast<float>(value);
+        _config.homeTargetTemp = value;
         break;
     case ValvePercent:
-        _config.valvePercent = static_cast<short>(value);
+        _config.valvePercent = value;
         break;
     default:
         break;
     }
+    _need_save = true;
+    _last_save = millis();
 }
 DeviceConfig::DeviceConfig()
 {
     LoadConfig();
+}
+
+void DeviceConfig::Loop()
+{
+    if (_need_save && millis() - _last_save >= CONFIG_SAVE_TIMEOUT)
+    {
+        _need_save = false;
+        _last_save = millis();
+        SaveConfig();
+    }
 }

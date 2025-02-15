@@ -5,13 +5,15 @@
 class DeviceConfig
 {
 private : Configuration _config;
-    int const _device_uid = 77234566436;
+    int const _device_uid = 77234566;
     void LoadConfig();
-    void SaveConfig(bool newConfig = false);
-
+    void SaveConfig();
+    uint32_t _last_save;
+    bool _need_save = false;
 public:
     DeviceConfig();
     ~DeviceConfig() = default;
-    template <typename T, ParametreType>
+    template <typename T>
     void SetParametre(T value, ParametreType type);
+    void Loop();
 };

@@ -1,10 +1,8 @@
 #include <GyverStepper2.h>
 #include <memory>
 #include <algorithm>
-#include "../Helpers/Pins.h"
+#include "../Helpers/Defines.h"
 
-const int stepsPerRevolution = 2038;
-const int maxPosition = 1000;
 
 class StepperControl {
 private:
@@ -27,6 +25,6 @@ public:
   void Homing();
   short GetCurrentPercent();
   int GetMaxPosition() const {
-    return maxPosition;
+    return MAX_POSITION;
   }
 };

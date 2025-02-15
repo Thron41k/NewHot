@@ -5,7 +5,6 @@ ValveControl::ValveControl()
 
 void ValveControl::SetPercentage(short percent)
 {
-  percent = std::clamp(percent, static_cast<short>(0), static_cast<short>(100));
   _stepperControl->GoToPositionByPercent(percent);
 }
 

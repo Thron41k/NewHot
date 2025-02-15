@@ -1,5 +1,5 @@
 typedef enum {
-    ModeType,
+    Mode,
     BoilerMaxTemp,
     HomeTargetTemp,
     ValvePercent
