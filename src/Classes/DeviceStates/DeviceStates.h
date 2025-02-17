@@ -5,8 +5,9 @@
 #include "../ValveControl/ValveControl.h"
 #include <Classes/DeviceConfig/DeviceConfig.h>
 #include <Classes/Helpers/Observer/IObserver.h>
+#include <Classes/Helpers/Observer/IEncoderEventObserver.h>
 
-class DeviceStates : public IObserver
+class DeviceStates : public IObserver, public IEncoderEventObserver
 {
 private:
     Logger _logger;

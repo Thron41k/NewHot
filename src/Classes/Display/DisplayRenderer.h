@@ -1,5 +1,5 @@
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef DISPLAYRENDERER_H
+#define DISPLAYRENDERER_H
 
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
@@ -9,7 +9,7 @@
 #include <Classes/DeviceStates/DeviceStates.h>
 #include <Classes/Helpers/Observer/IObserver.h>
 
-class Display : public IObserver 
+class DisplayRenderer
 {
 private:
     std::unique_ptr<LiquidCrystal_I2C> _lcd;
@@ -19,9 +19,8 @@ private:
     uint32_t _rotation_timeout;
     bool _rotation_state = false;
 public:
-    ~Display();
-    Display(const DeviceStates &_deviceStates);
-    void Update() override;
+    ~DisplayRenderer() = default;
+    DisplayRenderer(const DeviceStates &_deviceStates);
     void Loop();
 };
 

@@ -1,6 +1,6 @@
-#include "Display.h"
+#include "DisplayRenderer.h"
 
-void Display::PrintHomeTemp()
+void DisplayRenderer::PrintHomeTemp()
 {
     if (!_deviceStates)
         return;
@@ -19,7 +19,7 @@ void Display::PrintHomeTemp()
     _lcd->print(Utils::FloatToString(targetTemp));
 }
 
-void Display::PrintValvePercent()
+void DisplayRenderer::PrintValvePercent()
 {
     short percent = _deviceStates->GetValvePercent();
     int spaces = (percent < 10) ? 2 : (percent < 100) ? 1
@@ -30,22 +30,15 @@ void Display::PrintValvePercent()
     _lcd->print(buffer);
 }
 
-Display::~Display()
-{
-    if (_deviceStates) {
-        const_cast<DeviceStates&>(*_deviceStates).Detach(this);
-    }
-}
 
-Display::Display(const DeviceStates &_deviceStates)
+DisplayRenderer::DisplayRenderer(const DeviceStates &_deviceStates)
     : _deviceStates(&_deviceStates)
 {
     _lcd = std::make_unique<LiquidCrystal_I2C>(0x27, 16, 2);
     _lcd->init(DISPLAY_I2C_SDA, DISPLAY_I2C_SCL);
     _lcd->backlight();
-    const_cast<DeviceStates&>(_deviceStates).Attach(this);
 }
-void Display::Update()
+ /*void DisplayRenderer::Update()
 {
     if (!_deviceStates)
         return;
@@ -71,9 +64,9 @@ void Display::Update()
         _lcd->print(" ");
     _lcd->print(Utils::FloatToString(temp));
     _lcd->print("°C");
-}
+}*/
 
-void Display::Loop()
+void DisplayRenderer::Loop()
 {
     if (!_deviceStates)
         return;
