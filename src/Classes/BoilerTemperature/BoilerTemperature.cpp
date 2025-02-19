@@ -15,7 +15,7 @@ void BoilerTemperature::Loop()
             float tmp_temp = _ds->getTemp();
             if (_temp != tmp_temp)
             {
-                NotifyObservers();
+                NotifyObservers(ParametreType::BoilerCurrentTemp);
                 _temp = tmp_temp;
             }
         }
@@ -30,11 +30,11 @@ void BoilerTemperature::Loop()
     }
 }
 
-void BoilerTemperature::NotifyObservers()
+void BoilerTemperature::NotifyObservers(ParametreType param_type)
 {
     for (auto observer : observers)
     {
-        observer->Update();
+        observer->Update(param_type);
     }
 }
 

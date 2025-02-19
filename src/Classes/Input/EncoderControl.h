@@ -4,7 +4,7 @@
 #include <Classes/Helpers/Observer/IEncoderEventObserver.h>
 #include "../Helpers/Defines.h"
 
-class Encoder
+class EncoderControl
 {
 private:
     std::unique_ptr<EncButton> _enc;
@@ -12,8 +12,8 @@ private:
     void NotifyObservers(EncoderEventEnum event);
 
 public:
-    Encoder() : _enc(std::make_unique<EncButton>(ENCODER_LEFT, ENCODER_RIGHT, ENCODER_BUTTON)){};
-    ~Encoder() = default;
+    EncoderControl() : _enc(std::make_unique<EncButton>(ENCODER_LEFT, ENCODER_RIGHT, ENCODER_BUTTON)) {};
+    ~EncoderControl() = default;
     void Attach(IEncoderEventObserver *observer);
     void Detach(IEncoderEventObserver *observer);
     void Loop();

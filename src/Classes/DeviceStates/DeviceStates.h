@@ -4,8 +4,8 @@
 #include "../BoilerTemperature/BoilerTemperature.h"
 #include "../ValveControl/ValveControl.h"
 #include <Classes/DeviceConfig/DeviceConfig.h>
-#include <Classes/Helpers/Observer/IObserver.h>
 #include <Classes/Helpers/Observer/IEncoderEventObserver.h>
+#include <Classes/Input/EncoderControl.h>
 
 class DeviceStates : public IObserver, public IEncoderEventObserver
 {
@@ -17,27 +17,37 @@ private:
     float _currentHomeTemp = 0.0;
     float _outdoorTemp = 0.0;
     std::vector<IObserver *> observers;
-    void NotifyObservers();
+    const EncoderControl *_enc;
+    void NotifyObservers(ParametreType param_type) const;
 
 public:
-    DeviceStates(Logger logger)
-        : _boilerTemperature(std::make_unique<BoilerTemperature>(logger)), _valveControl(std::make_unique<ValveControl>()), _deviceConfig(std::make_unique<DeviceConfig>())
-    {
-        const_cast<BoilerTemperature &>(*_boilerTemperature).Attach(this);
-    }
-    ~DeviceStates() = default;
+    DeviceStates(Logger logger, const EncoderControl &encoder);
+    ~DeviceStates();
     float GetBoilerTemp() const { return _boilerTemperature->GetTemp(); }
     short GetValvePercent() const { return _valveControl->GetPercent(); }
-    void SetValvePercent(short percent);
-    void SetMode(ModeType mode);
-    void SetHomeTargetTemp(float temp);
+    void SetValvePercent(short percent) const;
+    void SetMode(ModeType mode) const;
+    ModeType GetMode() const { return _deviceConfig->GetConfig().mode; }
+    void SetTargetHomeTemp(float temp) const;
+    float GetTargetHomeTemp() const { return _deviceConfig->GetConfig().homeTargetTemp; }
     void SetBoilerMaxTemp(float temp);
-    void SetCurrentHomeTemp(float temp) { _currentHomeTemp = temp; }
     float GetCurrentHomeTemp() const { return _currentHomeTemp; }
     DeviceConfig *GetDeviceConfig() const { return _deviceConfig.get(); }
     float GetOutdoorTemp() const { return _outdoorTemp; }
+    void SetWiFiCredentials(const char *ssid, const char *pass) const;
+    std::string GetWiFiSSID() const {return _deviceConfig->GetConfig().WIFI_SSID;}
+    std::string GetWiFiPass() const {return _deviceConfig->GetConfig().WIFI_PASS;}
+    IPAddress GetMQTTIP() const {return _deviceConfig->GetConfig().MQTT_IP;}
+    void SetMQTTIP(std::string ip) const;
+    int GetMQTTPort() const {return _deviceConfig->GetConfig().MQTT_Port;}
+    void SetMQTTPort(int port) const;
+    std::string GetMQTTUser() const {return _deviceConfig->GetConfig().MQTT_User;}
+    void SetMQTTUser(std::string user) const;
+    std::string GetMQTTPass() const {return _deviceConfig->GetConfig().MQTT_Pass;}
+    void SetMQTTPass(std::string pass) const;
     void Loop();
-    void Update() override;
+    void Update(ParametreType param_type) override;
+    void Event(EncoderEventEnum event) override;
     void Attach(IObserver *observer);
     void Detach(IObserver *observer);
 };

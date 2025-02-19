@@ -1,24 +1,4 @@
 #include "DeviceConfig.h"
-#include <Classes/Helpers/Defines.h>
-
-void DeviceConfig::LoadConfig()
-{
-    EEPROM.begin(4096);
-    EEPROM.get(0, _config);
-    EEPROM.end();
-    if (_config.device_uid != _device_uid)
-    {
-        _config = Configuration();
-        SaveConfig();
-    }
-}
-
-void DeviceConfig::SaveConfig()
-{
-    EEPROM.begin(4096);
-    EEPROM.put(0, _config);
-    EEPROM.end();
-}
 
 template <typename T>
 void DeviceConfig::SetParametre(T value, ParametreType type)
@@ -37,23 +17,39 @@ void DeviceConfig::SetParametre(T value, ParametreType type)
     case ValvePercent:
         _config.valvePercent = value;
         break;
+    case WiFiPass:
+        strcpy(_config.WIFI_PASS, value);
+        break;
+    case WiFiSSID:
+        strcpy(_config.WIFI_SSID, value);
+        break;
+    case MQTT_IP:
+        _config.MQTT_IP.fromString(value.c_str());
+        break;
+    case MQTT_Port:
+        _config.MQTT_Port = value;
+        break;
+    case MQTT_Pass:
+        strcpy(_config.MQTT_Pass, value);
+        break;
+    case MQTT_User:
+        strcpy(_config.MQTT_User, value);
+        break;
     default:
         break;
     }
-    _need_save = true;
-    _last_save = millis();
+    _file_data->update();
 }
 DeviceConfig::DeviceConfig()
 {
-    LoadConfig();
+    LittleFS.begin();
+    _file_data = std::make_unique<FileData>(&LittleFS, "/config.bin", 'B', &_config, sizeof(_config));
+    _file_data->addWithoutWipe(true);
+    _file_data->read();
+    _file_data->setTimeout(CONFIG_SAVE_TIMEOUT);
 }
 
 void DeviceConfig::Loop()
 {
-    if (_need_save && millis() - _last_save >= CONFIG_SAVE_TIMEOUT)
-    {
-        _need_save = false;
-        _last_save = millis();
-        SaveConfig();
-    }
+    _file_data->tick();
 }

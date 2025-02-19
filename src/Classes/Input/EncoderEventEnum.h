@@ -1,3 +1,6 @@
+#ifndef ENCODEREVENTENUM_H
+#define ENCODEREVENTENUM_H
+
 typedef enum
 {
     Left,
@@ -6,3 +9,5 @@ typedef enum
     LongPress,
     DoublePress
 } EncoderEventEnum;
+
+#endif

@@ -13,7 +13,7 @@ private:
     float _temp;
     std::unique_ptr<GyverDS18Single> _ds;
     std::vector<IObserver*> observers;
-    void NotifyObservers();
+    void NotifyObservers(ParametreType param_type);
 
 public:
     BoilerTemperature(Logger logger);

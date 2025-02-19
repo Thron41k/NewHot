@@ -1,17 +1,15 @@
 #include <EEPROM.h>
 #include "Configuration.h"
 #include "ParametreType.h"
+#include "FileData.h"
+#include <LittleFS.h>
+#include <Classes/Helpers/Defines.h>
 
 class DeviceConfig
 {
 private:
     Configuration _config;
-    int const _device_uid = 77234566;
-    void LoadConfig();
-    void SaveConfig();
-    uint32_t _last_save;
-    bool _need_save = false;
-
+    std::unique_ptr<FileData> _file_data;
 public:
     DeviceConfig();
     ~DeviceConfig() = default;

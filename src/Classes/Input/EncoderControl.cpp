@@ -1,6 +1,6 @@
-#include "Encoder.h"
+#include "EncoderControl.h"
 
-void Encoder::NotifyObservers(EncoderEventEnum event)
+void EncoderControl::NotifyObservers(EncoderEventEnum event)
 {
     for (auto observer : observers)
     {
@@ -8,17 +8,17 @@ void Encoder::NotifyObservers(EncoderEventEnum event)
     }
 }
 
-void Encoder::Attach(IEncoderEventObserver *observer)
+void EncoderControl::Attach(IEncoderEventObserver *observer)
 {
     observers.push_back(observer);
 }
 
-void Encoder::Detach(IEncoderEventObserver *observer)
+void EncoderControl::Detach(IEncoderEventObserver *observer)
 {
     observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
 }
 
-void Encoder::Loop()
+void EncoderControl::Loop()
 {
     _enc->tick();
     if(_enc->left()){

@@ -1,4 +1,5 @@
 typedef enum{
     MainScreen,
-    Menu
+    MainScreenModeSelected,
+    Menu,
 } DisplayStateEnum;
