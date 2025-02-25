@@ -18,6 +18,7 @@ private:
     WiFiControl &_wifiControl;
     bool _dns_state = false;
     bool shouldReboot = false;
+    String getStatusJson(const WiFiControl &wifiControl);
 public:
     WebServerControl(WiFiControl &w);
     void Loop();

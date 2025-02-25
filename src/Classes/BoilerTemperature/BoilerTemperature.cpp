@@ -1,49 +1,36 @@
 #include "BoilerTemperature.h"
 
-BoilerTemperature::BoilerTemperature(Logger logger)
-    : _logger(logger), _ds(std::make_unique<GyverDS18Single>(TEMPERATURE_SENSOR))
-{
-}
+BoilerTemperature::BoilerTemperature(Logger logger, std::unique_ptr<ITemperatureSensor> sensor)
+    : _logger(logger), _sensor(std::move(sensor)), _temp(0.0), _tmr(0) {}
 
-void BoilerTemperature::Loop()
-{
-    if (millis() - _tmr >= _ds->getConversionTime())
-    {
-        _tmr = millis();
-        if (_ds->readTemp())
-        {
-            float tmp_temp = _ds->getTemp();
-            if (_temp != tmp_temp)
-            {
-                NotifyObservers(ParametreType::BoilerCurrentTemp);
-                _temp = tmp_temp;
-            }
-        }
-        else
-        {
-            _logger.Error("DS18B20 readTemp error");
-        }
-        if (!_ds->requestTemp())
-        {
-            _logger.Error("DS18B20 requestTemp error");
-        }
+void BoilerTemperature::Loop() {
+  if (millis() - _tmr >= _sensor->GetConversionTime()) {
+    _tmr = millis();
+    if (_sensor->ReadTemp()) {
+      float tmp_temp = _sensor->GetTemp();
+      if (_temp != tmp_temp) {
+        _temp = tmp_temp;
+        NotifyObservers(_temp);
+      }
+    } else {
+      _logger.Error("Temperature sensor read error");
     }
-}
-
-void BoilerTemperature::NotifyObservers(ParametreType param_type)
-{
-    for (auto observer : observers)
-    {
-        observer->Update(param_type);
+    if (!_sensor->RequestTemp()) {
+      _logger.Error("Temperature sensor request error");
     }
+  }
 }
 
-void BoilerTemperature::Attach(IObserver *observer)
-{
-    observers.push_back(observer);
+void BoilerTemperature::NotifyObservers(float temp) {
+  for (auto* observer : _observers) {
+    observer->OnBoilerTempChanged(temp);
+  }
 }
 
-void BoilerTemperature::Detach(IObserver *observer)
-{
-    observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+void BoilerTemperature::Attach(ITemperatureObserver* observer) {
+  _observers.push_back(observer);
+}
+
+void BoilerTemperature::Detach(ITemperatureObserver* observer) {
+  _observers.erase(std::remove(_observers.begin(), _observers.end(), observer), _observers.end());
 }

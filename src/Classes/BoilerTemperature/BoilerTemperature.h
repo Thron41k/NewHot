@@ -1,9 +1,10 @@
-#include <GyverDS18.h>
+#ifndef BOILER_TEMPERATURE_H
+#define BOILER_TEMPERATURE_H
+
 #include <memory>
-#include <algorithm>
-#include <Classes/Helpers/Logger.h>
-#include <Classes/Helpers/Defines.h>
-#include <Classes/Helpers/Observer/IObserver.h>
+#include "../DeviceStates/Interfaces/ITemperatureSensor.h"
+#include "../Helpers/Logger.h"
+#include "../Helpers/Observers/ITemperatureObserver.h" // Новый интерфейс
 
 class BoilerTemperature
 {
@@ -11,15 +12,18 @@ private:
     Logger _logger;
     uint32_t _tmr;
     float _temp;
-    std::unique_ptr<GyverDS18Single> _ds;
-    std::vector<IObserver*> observers;
-    void NotifyObservers(ParametreType param_type);
+    std::unique_ptr<ITemperatureSensor> _sensor;
+    std::vector<ITemperatureObserver *> _observers;
 
 public:
-    BoilerTemperature(Logger logger);
-    ~BoilerTemperature() = default;
+    BoilerTemperature(Logger logger, std::unique_ptr<ITemperatureSensor> sensor);
     void Loop();
-    float GetTemp() const { return _temp; };
-    void Attach(IObserver* observer);
-    void Detach(IObserver* observer);
+    float GetTemp() const { return _temp; }
+    void Attach(ITemperatureObserver *observer);
+    void Detach(ITemperatureObserver *observer);
+
+private:
+    void NotifyObservers(float temp);
 };
+
+#endif

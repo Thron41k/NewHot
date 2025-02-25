@@ -1,55 +1,78 @@
-#ifndef DEVICESTATES_H
-#define DEVICESTATES_H
+#include <vector>
+#include "Interfaces/ITemperatureManager.h"
+#include "Interfaces/IValveManager.h"
+#include "Interfaces/IConfigManager.h"
+#include <Classes/Helpers/Observers/ITemperatureObserver.h>
+#include <Classes/Helpers/Observers/IValveObserver.h>
+#include <Classes/Helpers/Observers/IConfigObserver.h>
+#include "Classes/Input/EncoderControl.h"
 
-#include "../BoilerTemperature/BoilerTemperature.h"
-#include "../ValveControl/ValveControl.h"
-#include <Classes/DeviceConfig/DeviceConfig.h>
-#include <Classes/Helpers/Observer/IEncoderEventObserver.h>
-#include <Classes/Input/EncoderControl.h>
-
-class DeviceStates : public IObserver, public IEncoderEventObserver
-{
+class DeviceStates : public IEncoderObserver {
 private:
-    Logger _logger;
-    std::unique_ptr<DeviceConfig> _deviceConfig;
-    std::unique_ptr<BoilerTemperature> _boilerTemperature;
-    std::unique_ptr<ValveControl> _valveControl;
-    float _currentHomeTemp = 0.0;
-    float _outdoorTemp = 0.0;
-    std::vector<IObserver *> observers;
-    const EncoderControl *_enc;
-    void NotifyObservers(ParametreType param_type) const;
+  std::unique_ptr<ITemperatureManager> _tempManager;
+  std::unique_ptr<IValveManager> _valveManager;
+  std::unique_ptr<IConfigManager> _configManager;
+  std::vector<ITemperatureObserver*> _tempObservers;
+  std::vector<IValveObserver*> _valveObservers;
+  std::vector<IConfigObserver*> _configObservers;
+  const EncoderControl& _enc;
+
+  void NotifyTempObservers(float temp) {
+    for (auto* obs : _tempObservers) obs->OnBoilerTempChanged(temp);
+  }
+  void NotifyValveObservers(short percent) {
+    for (auto* obs : _valveObservers) obs->OnValvePercentChanged(percent);
+  }
+  void NotifyConfigObservers(ParametreType param) {
+    for (auto* obs : _configObservers) obs->OnConfigChanged(param);
+  }
 
 public:
-    DeviceStates(Logger logger, const EncoderControl &encoder);
-    ~DeviceStates();
-    float GetBoilerTemp() const { return _boilerTemperature->GetTemp(); }
-    short GetValvePercent() const { return _valveControl->GetPercent(); }
-    void SetValvePercent(short percent) const;
-    void SetMode(ModeType mode) const;
-    ModeType GetMode() const { return _deviceConfig->GetConfig().mode; }
-    void SetTargetHomeTemp(float temp) const;
-    float GetTargetHomeTemp() const { return _deviceConfig->GetConfig().homeTargetTemp; }
-    void SetBoilerMaxTemp(float temp);
-    float GetCurrentHomeTemp() const { return _currentHomeTemp; }
-    DeviceConfig *GetDeviceConfig() const { return _deviceConfig.get(); }
-    float GetOutdoorTemp() const { return _outdoorTemp; }
-    void SetWiFiCredentials(const char *ssid, const char *pass) const;
-    std::string GetWiFiSSID() const {return _deviceConfig->GetConfig().WIFI_SSID;}
-    std::string GetWiFiPass() const {return _deviceConfig->GetConfig().WIFI_PASS;}
-    IPAddress GetMQTTIP() const {return _deviceConfig->GetConfig().MQTT_IP;}
-    void SetMQTTIP(std::string ip) const;
-    int GetMQTTPort() const {return _deviceConfig->GetConfig().MQTT_Port;}
-    void SetMQTTPort(int port) const;
-    std::string GetMQTTUser() const {return _deviceConfig->GetConfig().MQTT_User;}
-    void SetMQTTUser(std::string user) const;
-    std::string GetMQTTPass() const {return _deviceConfig->GetConfig().MQTT_Pass;}
-    void SetMQTTPass(std::string pass) const;
-    void Loop();
-    void Update(ParametreType param_type) override;
-    void Event(EncoderEventEnum event) override;
-    void Attach(IObserver *observer);
-    void Detach(IObserver *observer);
-};
+  DeviceStates(std::unique_ptr<ITemperatureManager> tempMgr,
+               std::unique_ptr<IValveManager> valveMgr,
+               std::unique_ptr<IConfigManager> configMgr,
+               const EncoderControl& enc)
+    : _tempManager(std::move(tempMgr)), _valveManager(std::move(valveMgr)),
+      _configManager(std::move(configMgr)), _enc(enc) {
+    const_cast<EncoderControl&>(_enc).Attach(this);
+  }
 
-#endif
+  ~DeviceStates() {
+    const_cast<EncoderControl&>(_enc).Detach(this);
+  }
+
+  void Loop() {
+    _tempManager->Loop();
+    _configManager->Loop();
+  }
+
+  void OnEncoderEvent(EncoderEventEnum event) override {
+    ModeType mode = _configManager->GetMode();
+    if (event == EncoderEventEnum::Left) {
+      if (mode == ModeType::Auto) {
+        _configManager->SetTargetHomeTemp(_configManager->GetTargetHomeTemp() - 1);
+        NotifyConfigObservers(HomeTargetTemp);
+      } else if (mode == ModeType::Manual) {
+        short newPercent = max(0, _valveManager->GetPercent() - 1);
+        _valveManager->SetPercent(newPercent);
+        NotifyValveObservers(newPercent);
+      }
+    } else if (event == EncoderEventEnum::Right) {
+      if (mode == ModeType::Auto) {
+        _configManager->SetTargetHomeTemp(_configManager->GetTargetHomeTemp() + 1);
+        NotifyConfigObservers(HomeTargetTemp);
+      } else if (mode == ModeType::Manual) {
+        short newPercent = min(100, _valveManager->GetPercent() + 1);
+        _valveManager->SetPercent(newPercent);
+        NotifyValveObservers(newPercent);
+      }
+    }
+  }
+
+  void Attach(ITemperatureObserver* obs) { 
+    _tempObservers.push_back(obs);
+    _tempManager->Attach(obs); // Передаём наблюдателя в TemperatureManager
+  }
+  void Attach(IValveObserver* obs) { _valveObservers.push_back(obs); }
+  void Attach(IConfigObserver* obs) { _configObservers.push_back(obs); }
+};
