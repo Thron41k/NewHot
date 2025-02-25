@@ -29,26 +29,26 @@ public:
   }
 
   void RenderBoilerTemp(float temp) override {
-    RenderSlideInfo("КОТЁЛ " + Utils::FloatToString(temp) + "°C");
+    RenderSlideInfo("КОТЁЛ " + String(Utils::FloatToString(temp).c_str()) + "°C");
   }
 
   void RenderHomeTemp(float temp) override {
     short pos = 6;
     _lcd->setCursor(0, pos);
     _lcd->print("     ");
-    String result = Utils::FloatToString(temp);
+    String result = Utils::FloatToString(temp).c_str();
     pos = pos - (5 - result.length());
     _lcd->print(result);
   }
 
   void RenderOutdoorTemp(float temp) override {
-    RenderSlideInfo("УЛИЦА " + Utils::FloatToString(temp) + "°C");
+    RenderSlideInfo("УЛИЦА " + String(Utils::FloatToString(temp).c_str()) + "°C");
   }
 
   void RenderTargetHomeTemp(float temp) override {
     _lcd->setCursor(0, 12);
     _lcd->print("     ");
-    String result = Utils::FloatToString(temp);
+    String result = Utils::FloatToString(temp).c_str();
     _lcd->setCursor(0, 12);
     _lcd->print(result);
   }
@@ -57,7 +57,7 @@ public:
     const short width = 11;
     _lcd->setCursor(0, 6);
     _lcd->print(String(width, ' '));
-    String result = Utils::IntToString(percent) + "%";
+    String result = String(Utils::IntToString(percent).c_str()) + "%";
     short startPos = (width - result.length()) / 2;
     _lcd->setCursor(0, startPos);
     _lcd->print(result);

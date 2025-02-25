@@ -1,21 +1,51 @@
-#include <WiFi.h>
+#ifndef HOMEASSISTANTMQTT_H
+#define HOMEASSISTANTMQTT_H
+
+#include <WiFiClient.h>
 #include <HADevice.h>
 #include <HAMqtt.h>
 #include <memory>
-#include "Classes/DeviceStates/DeviceStates.h"
-#include <device-types/HANumber.h>
+#include <vector>
+#include "Interfaces/IMQTTDevice.h"
 
-class HomeAssistantMQTT : public IObserver
-{
-public:
-    HomeAssistantMQTT(DeviceStates &deviceStates);
-    void onNumberCommand(HANumeric number, HANumber *sender);
-    ~HomeAssistantMQTT() = default;
-    void Update(ParametreType param_type) override;
+class HomeAssistantMQTT {
 private:
-    DeviceStates *_deviceStates;
-    WiFiClient client;
-    std::unique_ptr<HANumber> _airValve;
+    WiFiClient _client;
     std::unique_ptr<HADevice> _hadevice;
     std::unique_ptr<HAMqtt> _hamqtt;
+    std::vector<std::unique_ptr<IMQTTDevice>> _devices;
+
+    // Преобразует строку в массив байтов
+    std::vector<byte> stringToByteArray(const std::string& str) {
+        return std::vector<byte>(str.begin(), str.end());
+    }
+
+public:
+    HomeAssistantMQTT(const std::string& deviceName, const std::string& uniqueId) {
+        _hadevice = std::make_unique<HADevice>();
+        _hamqtt = std::make_unique<HAMqtt>(_client, *_hadevice);
+        _hadevice->setName(deviceName.c_str());
+
+        // Преобразуем uniqueId в массив байтов
+        auto uniqueIdBytes = stringToByteArray(uniqueId);
+        _hadevice->setUniqueId(uniqueIdBytes.data(), uniqueIdBytes.size());
+    }
+
+    void addDevice(std::unique_ptr<IMQTTDevice> device) {
+        device->setup(*_hadevice, *_hamqtt);
+        _devices.push_back(std::move(device));
+    }
+
+    void begin(const std::string& mqttIP, const std::string& mqttUser, const std::string& mqttPass) {
+        _hamqtt->begin(mqttIP.c_str(), mqttUser.c_str(), mqttPass.c_str());
+    }
+
+    void loop() {
+        for (auto& device : _devices) {
+            device->loop();
+        }
+        _hamqtt->loop();
+    }
 };
+
+#endif
