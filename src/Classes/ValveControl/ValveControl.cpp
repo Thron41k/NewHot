@@ -1,7 +1,11 @@
 #include "ValveControl.h"
 
 ValveControl::ValveControl()
-    : _stepperControl(std::make_unique<StepperControl>()) {}
+{
+  Serial.println("ValveControl initialized 0");
+  _stepperControl = std::make_unique<StepperControl>();
+  Serial.println("ValveControl initialized 1");
+}
 
 void ValveControl::SetPercentage(short percent)
 {

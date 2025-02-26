@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -21,3 +24,5 @@ public:
         return str;
      }
 };
+
+#endif

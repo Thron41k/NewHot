@@ -1,19 +1,20 @@
 #include "EncoderControl.h"
+#include "Classes/Helpers/Observers/IEncoderObserver.h"
 
 void EncoderControl::NotifyObservers(EncoderEventEnum event)
 {
     for (auto observer : observers)
     {
-        observer->Event(event);
+        observer->OnEncoderEvent(event);
     }
 }
 
-void EncoderControl::Attach(IEncoderEventObserver *observer)
+void EncoderControl::Attach(IEncoderObserver *observer)
 {
     observers.push_back(observer);
 }
 
-void EncoderControl::Detach(IEncoderEventObserver *observer)
+void EncoderControl::Detach(IEncoderObserver *observer)
 {
     observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
 }

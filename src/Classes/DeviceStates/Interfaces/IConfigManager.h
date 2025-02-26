@@ -1,3 +1,6 @@
+#ifndef ICONFIGMANAGER_H
+#define ICONFIGMANAGER_H
+
 #include <Classes/DeviceStates/ModeType.h>
 #include <string>
 #include <IPAddress.h>
@@ -23,3 +26,5 @@ class IConfigManager {
       virtual void Loop() = 0;
       virtual ~IConfigManager() = default;
     };
+
+#endif

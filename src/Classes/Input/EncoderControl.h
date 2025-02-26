@@ -1,3 +1,6 @@
+#ifndef ENCODER_CONTROL_H
+#define ENCODER_CONTROL_H
+
 #include <EncButton.h>
 #include <memory>
 #include "EncoderEventEnum.h"
@@ -18,3 +21,5 @@ public:
     void Detach(IEncoderObserver *observer);
     void Loop();
 };
+
+#endif

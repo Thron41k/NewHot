@@ -1,3 +1,6 @@
+#ifndef LCD_DISPLAY_RENDERER_H
+#define LCD_DISPLAY_RENDERER_H
+
 #include "Classes/Display/Interfaces/IDisplayRenderer.h"
 #include "memory"
 #include <LiquidCrystal_I2C.h>
@@ -71,3 +74,5 @@ public:
     _lcd->print(info);
   }
 };
+
+#endif

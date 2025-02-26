@@ -1,4 +1,8 @@
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
+
 #include <Classes/DeviceStates/ModeType.h>
+#include <IPAddress.h>
 
 struct Configuration {
     ModeType mode = ModeType::Manual;
@@ -12,3 +16,5 @@ struct Configuration {
     int MQTT_Port = 1883;
     IPAddress MQTT_IP = {0, 0, 0, 0};
   };
+
+#endif

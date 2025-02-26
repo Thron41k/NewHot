@@ -1,3 +1,6 @@
+#ifndef VALVECONTROL_H
+#define VALVECONTROL_H
+
 #include "..\StepperControl\StepperControl.h"
 
 class ValveControl {
@@ -9,3 +12,5 @@ public:
   void SetPercentage(short percent);
   short GetPercent();
 };
+
+#endif

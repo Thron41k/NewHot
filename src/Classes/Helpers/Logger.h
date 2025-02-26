@@ -1,3 +1,6 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <Arduino.h>
 
 class Logger{
@@ -10,3 +13,5 @@ class Logger{
             Serial.println(message);
         }
 };
+
+#endif

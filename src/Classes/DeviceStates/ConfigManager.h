@@ -1,3 +1,6 @@
+#ifndef CONFIGMANAGER_H
+#define CONFIGMANAGER_H
+
 #include "Classes/DeviceStates/Interfaces/IConfigManager.h"
 #include "Classes/DeviceConfig/DeviceConfig.h"
 class ConfigManager : public IConfigManager {
@@ -27,3 +30,5 @@ public:
   void SetMQTTPass(const std::string& pass) override { _config->SetParametre(pass, MQTT_Pass); }
   void Loop() override { _config->Loop(); }
 };
+
+#endif

@@ -2,9 +2,13 @@
 
 StepperControl::StepperControl()
 {
+  Serial.println("StepperControl initialized 0");
   pinMode(STEPPER_LIMSW_X, INPUT_PULLUP);
+  Serial.println("StepperControl initialized 1");
   _stepper = std::make_unique<GStepper2<STEPPER4WIRE>>(STEPS_PER_REVOLUTION, STEPPER_IN1, STEPPER_IN2, STEPPER_IN3, STEPPER_IN4);
-  Homing();
+  Serial.println("StepperControl initialized 2");
+  //Homing();
+  Serial.println("StepperControl initialized 3");
 }
 
 void StepperControl::GoToPositionByPercent(short percent)

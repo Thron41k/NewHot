@@ -1,47 +1,34 @@
+// WiFiControl.h
 #ifndef WIFICONTROL_H
 #define WIFICONTROL_H
 
-#include <Classes/DeviceStates/DeviceStates.h>
-#include <ESPAsyncWebServer.h>
-#include <DNSServer.h>
 #include <WiFi.h>
+#include "Interfaces/IWiFiManager.h"
+#include "Classes/DeviceStates/Interfaces/IConfigManager.h"
 #include "Classes/Helpers/Defines.h"
 #include "NetworkInfo.h"
+#include <memory>
+#include "Interfaces/IWiFiStrategy.h"
+#include "Interfaces/IWebServer.h"
 
-class WiFiControl;
-
-class WebServerControl
+class WiFiControl : public IWiFiManager
 {
 private:
-    std::unique_ptr<AsyncWebServer> _webserver;
-    std::unique_ptr<DNSServer> _dnsserver;
-    WiFiControl &_wifiControl;
-    bool _dns_state = false;
-    bool shouldReboot = false;
-    String getStatusJson(const WiFiControl &wifiControl);
-public:
-    WebServerControl(WiFiControl &w);
-    void Loop();
-    ~WebServerControl() = default;
-    void StartDNS();
-    void StopDNS();
-};
+    std::unique_ptr<IWiFiStrategy> _strategy;
+    std::unique_ptr<IWebServer> _webServer;
+    IConfigManager &_configMgr;
+    uint32_t _lastConnection;
 
-class WiFiControl
-{
-private:
-    std::unique_ptr<WebServerControl> _webserverControl;
-    const DeviceStates &_deviceStates;
-    void StartAP();
-    uint32_t _last_connection;
 public:
-    WiFiControl(const DeviceStates &deviceStates);
-    ~WiFiControl() = default;
+    WiFiControl(IConfigManager &configMgr, std::unique_ptr<IWiFiStrategy> strategy, std::unique_ptr<IWebServer> webServer);
 
-    std::vector<NetworkInfo> ScanNetworks();
-    bool ConnectToAP(const std::string &ssid, const std::string &password);
-    void Loop();
-    const DeviceStates* GetDeviceStates() const { return &_deviceStates; }
+    bool ConnectToAP(const std::string &ssid, const std::string &password) override;
+    std::vector<NetworkInfo> ScanNetworks() override;
+    bool IsConnected() const override { return WiFi.status() == WL_CONNECTED; }
+    bool APStarted() const override { return WiFi.softAPgetStationNum() > 0; }
+    String GetSSID() const override { return WiFi.SSID(); }
+    IPAddress GetIP() const override { return WiFi.localIP(); }
+    void Loop() override;
 };
 
 #endif
