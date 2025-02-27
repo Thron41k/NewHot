@@ -1,13 +1,17 @@
 #include "WebServerControl.h"
 
-WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &configMgr, const IStatusProvider &statusProvider)
-    : _webserver(std::make_unique<AsyncWebServer>(80)), _dnsserver(std::make_unique<DNSServer>()),
-      _wifiManager(wifiManager), _configMgr(configMgr), _statusProvider(statusProvider)
-{
-  Serial.println("WebServerControl initialized 0");
-  // Главная страница с интерактивным интерфейсом
-  _webserver->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)
-                 {
+WebServerControl::WebServerControl(IWiFiManager& wifiManager, IConfigManager& configMgr, const IStatusProvider& statusProvider)
+  : _webserver(std::make_unique<AsyncWebServer>(80)), _dnsserver(std::make_unique<DNSServer>()),
+    _wifiManager(wifiManager), _configMgr(configMgr), _statusProvider(statusProvider) {
+}
+
+void WebServerControl::init() {
+  setupRoutes();
+  _webserver->begin();
+}
+
+void WebServerControl::setupRoutes() {
+  _webserver->on("/", HTTP_GET, [this](AsyncWebServerRequest *request) {
     String html = R"(
       <!DOCTYPE html>
       <html>
@@ -117,7 +121,6 @@ WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &co
             .catch(() => alert('Error saving MQTT settings'));
           };
 
-          // Инициализация
           scanNetworks();
           updateStatus();
           setInterval(updateStatus, 5000);
@@ -125,11 +128,10 @@ WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &co
       </body>
       </html>
     )";
-    request->send(200, "text/html", html); });
+    request->send(200, "text/html", html);
+  });
 
-  // Маршрут для списка сетей
-  _webserver->on("/networks", HTTP_GET, [this](AsyncWebServerRequest *request)
-                 {
+  _webserver->on("/networks", HTTP_GET, [this](AsyncWebServerRequest *request) {
     std::vector<NetworkInfo> networks = _wifiManager.ScanNetworks();
     String json = "[";
     for (size_t i = 0; i < networks.size(); i++) {
@@ -137,15 +139,14 @@ WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &co
       if (i < networks.size() - 1) json += ",";
     }
     json += "]";
-    request->send(200, "application/json", json); });
+    request->send(200, "application/json", json);
+  });
 
-  // Маршрут для статуса
-  _webserver->on("/status", HTTP_GET, [this](AsyncWebServerRequest *request)
-                 { request->send(200, "application/json", _statusProvider.GetStatusJson()); });
+  _webserver->on("/status", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    request->send(200, "application/json", _statusProvider.GetStatusJson());
+  });
 
-  // Подключение к Wi-Fi
-  _webserver->on("/connect", HTTP_POST, [this](AsyncWebServerRequest *request)
-                 {
+  _webserver->on("/connect", HTTP_POST, [this](AsyncWebServerRequest *request) {
     if (!request->hasParam("ssid", true) || !request->hasParam("password", true)) {
       request->send(400, "text/plain", "Invalid request");
       return;
@@ -158,11 +159,10 @@ WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &co
       _shouldReboot = true;
     } else {
       request->send(200, "text/plain", "Failed to connect to " + ssid);
-    } });
+    }
+  });
 
-  // Сохранение настроек MQTT
-  _webserver->on("/mqtt", HTTP_POST, [this](AsyncWebServerRequest *request)
-                 {
+  _webserver->on("/mqtt", HTTP_POST, [this](AsyncWebServerRequest *request) {
     if (!request->hasParam("host", true) || !request->hasParam("port", true) || 
         !request->hasParam("user", true) || !request->hasParam("password", true)) {
       request->send(400, "text/plain", "Invalid request");
@@ -172,37 +172,32 @@ WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &co
     _configMgr.SetMQTTPort(request->getParam("port", true)->value().toInt());
     _configMgr.SetMQTTUser(request->getParam("user", true)->value().c_str());
     _configMgr.SetMQTTPass(request->getParam("password", true)->value().c_str());
-    request->send(200, "text/plain", "MQTT settings saved"); });
-  Serial.println("WebServerControl initialized 1");
-
-  Serial.println("WebServerControl initialized 2");
+    request->send(200, "text/plain", "MQTT settings saved");
+  });
 }
 
-void WebServerControl::Loop()
-{
-  if (!_isStarted && (_wifiManager.APStarted() || _wifiManager.IsConnected()))
-  {
-    _webserver->begin();
-    _isStarted = true;
-  }
-  if (_shouldReboot)
-  {
+void WebServerControl::Loop() {
+  if (_shouldReboot) {
     delay(2000);
     ESP.restart();
   }
-  _dnsserver->processNextRequest();
+  if (_wifiManager.isWifiReady()) {
+    _dnsserver->processNextRequest();
+  }
 }
 
-void WebServerControl::StartDNS()
-{
-  if (_dnsState)
-    _dnsserver->stop();
+void WebServerControl::StartDNS() {
+  if (!_wifiManager.isWifiReady()) {
+    Serial.println("WiFi not ready, skipping DNS start");
+    return;
+  }
+  Serial.println("Starting DNS server");
+  if (_dnsState) _dnsserver->stop();
   _dnsState = _dnsserver->start(53, "*", WiFi.softAPIP());
+  Serial.println("DNS server started: " + String(_dnsState ? "success" : "failed"));
 }
 
-void WebServerControl::StopDNS()
-{
-  if (_dnsState)
-    _dnsserver->stop();
+void WebServerControl::StopDNS() {
+  if (_dnsState) _dnsserver->stop();
   _dnsState = false;
 }

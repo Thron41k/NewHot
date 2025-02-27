@@ -1,10 +1,11 @@
 #include "BoilerTemperature.h"
+#include <Classes/Helpers/Defines.h>
 
 BoilerTemperature::BoilerTemperature(Logger logger, std::unique_ptr<ITemperatureSensor> sensor)
     : _logger(logger), _sensor(std::move(sensor)), _temp(0.0), _tmr(0) {}
 
 void BoilerTemperature::Loop() {
-  if (millis() - _tmr >= _sensor->GetConversionTime()) {
+  if (millis() - _tmr >= _sensor->GetConversionTime() && !TEST_MODE) {
     _tmr = millis();
     if (_sensor->ReadTemp()) {
       float tmp_temp = _sensor->GetTemp();

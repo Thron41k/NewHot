@@ -20,7 +20,11 @@ public:
     _config->SetParametre(ssid, WiFiSSID);
     _config->SetParametre(pass, WiFiPass);
   }
-  IPAddress GetMQTTIP() const override { return _config->GetConfig().MQTT_IP; }
+  IPAddress GetMQTTIP() const override { 
+    Serial.println("GetMQTTIP");
+    Serial.println(_config->GetConfig().MQTT_IP);
+    return _config->GetConfig().MQTT_IP;
+   }
   void SetMQTTIP(const std::string& ip) override { _config->SetParametre(ip, MQTT_IP); }
   int GetMQTTPort() const override { return _config->GetConfig().MQTT_Port; }
   void SetMQTTPort(int port) override { _config->SetParametre(port, MQTT_Port); }

@@ -11,61 +11,96 @@
 #include "Classes/Display/DisplayController.h"
 #include "Classes/HomeAssistantMQTT/MQTTValveDevice.h"
 #include "Classes/WiFiControl/WiFiSTAStrategy.h"
-#include "Classes/WiFiControl/WebServerControl.h"
 #include "Classes/WiFiControl/StatusProvider.h"
+#include "Classes/WiFiControl/WebServerControl.h"
 
-void setup()
-{
+// Глобальные объекты (объявление без инициализации)
+Logger logger;
+EncoderControl enc;
+std::unique_ptr<TemperatureManager> tempMgr;
+std::unique_ptr<ValveManager> valveMgr;
+std::unique_ptr<ConfigManager> configMgr;
+DeviceStates* deviceStates = nullptr;
+std::unique_ptr<LcdDisplayRenderer> renderer;
+DisplayController* display = nullptr;
+WiFiControl* wifi = nullptr;
+HomeAssistantMQTT* haMqtt = nullptr;
+
+void setup() {
   Serial.begin(115200);
   delay(100);
-  Logger logger;
-  EncoderControl enc;
-  logger.Log("System initialized 0");
-  auto tempMgr = std::make_unique<TemperatureManager>(logger);
-  logger.Log("System initialized 1");
-  auto valveMgr = std::make_unique<ValveManager>();
-  logger.Log("System initialized 2");
-  auto configMgr = std::make_unique<ConfigManager>();
-  logger.Log("System initialized 3");
-  DeviceStates deviceStates(std::move(tempMgr), std::move(valveMgr), std::move(configMgr), enc);
-  auto renderer = std::make_unique<LcdDisplayRenderer>();
-  DisplayController display(std::move(renderer), *deviceStates.getTempMgr(), *deviceStates.getValveMgr(), *deviceStates.getConfigMgr());
-  WiFiControl wifi(
-      *deviceStates.getConfigMgr(),
-      std::make_unique<WiFiSTAStrategy>(),
-      std::make_unique<WebServerControl>(wifi, *deviceStates.getConfigMgr(), StatusProvider(wifi)));
-  logger.Log("System initialized 1");
-  // Привязка наблюдателей к DeviceStates
-  /*deviceStates.Attach(static_cast<ITemperatureObserver *>(&display));
-  deviceStates.Attach(static_cast<IValveObserver *>(&display));
-  deviceStates.Attach(static_cast<IConfigObserver *>(&display));
-  logger.Log("System initialized 2");
-  // Установка уникального ID на основе MAC-адреса
+  logger.Log("Starting setup");
+
+  tempMgr = std::make_unique<TemperatureManager>(logger);
+  delay(10);
+  logger.Log("TemperatureManager initialized");
+
+  valveMgr = std::make_unique<ValveManager>();
+  delay(10);
+  logger.Log("ValveManager initialized");
+
+  configMgr = std::make_unique<ConfigManager>();
+  delay(10);
+  logger.Log("ConfigManager initialized");
+
+  deviceStates = new DeviceStates(std::move(tempMgr), std::move(valveMgr), std::move(configMgr), enc);
+  delay(10);
+  logger.Log("DeviceStates initialized");
+
+  renderer = std::make_unique<LcdDisplayRenderer>();
+  delay(10);
+  logger.Log("Renderer initialized");
+
+  display = new DisplayController(std::move(renderer), *deviceStates->getTempMgr(), *deviceStates->getValveMgr(), *deviceStates->getConfigMgr());
+  delay(10);
+  logger.Log("DisplayController initialized");
+
+  // Создаем WiFiControl без WebServerControl
+  wifi = new WiFiControl(*deviceStates->getConfigMgr(), std::make_unique<WiFiSTAStrategy>());
+  wifi->init(); // Инициализируем подключение
+  delay(10);
+  logger.Log("WiFiControl initialized");
+
+  // Создаем и добавляем WebServerControl после WiFiControl
+  std::unique_ptr<WebServerControl> webServer = std::make_unique<WebServerControl>(*wifi, *deviceStates->getConfigMgr(), StatusProvider(*wifi));
+  webServer->init(); // Инициализируем сервер
+  wifi->setWebServer(std::move(webServer));
+  delay(10);
+  logger.Log("WebServerControl added to WiFiControl");
+
   uint8_t mac[6];
   WiFi.macAddress(mac);
-  std::string uniqueId(reinterpret_cast<char *>(mac), 6);
-  HomeAssistantMQTT haMqtt = HomeAssistantMQTT("Smart Boiler", uniqueId);
-  logger.Log("System initialized 3");
-  // Добавление устройства MQTT для клапана
-  haMqtt.addDevice(std::make_unique<MQTTValveDevice>(*deviceStates.getValveMgr()));
-  haMqtt.begin(configMgr->GetMQTTIP().toString().c_str(), configMgr->GetMQTTUser(), configMgr->GetMQTTPass());
-  logger.Log("System initialized");*/
+  std::string uniqueId(reinterpret_cast<char*>(mac), 6);
+  haMqtt = new HomeAssistantMQTT("Smart Boiler", uniqueId);
+  delay(10);
+  logger.Log("HomeAssistantMQTT initialized");
+
+  deviceStates->Attach(static_cast<ITemperatureObserver*>(display));
+  deviceStates->Attach(static_cast<IValveObserver*>(display));
+  deviceStates->Attach(static_cast<IConfigObserver*>(display));
+  logger.Log("Observers attached");
+
+  haMqtt->addDevice(std::make_unique<MQTTValveDevice>(*deviceStates->getValveMgr()));
+  haMqtt->begin(
+    deviceStates->getConfigMgr()->GetMQTTIP().toString().c_str(),
+    deviceStates->getConfigMgr()->GetMQTTUser(),
+    deviceStates->getConfigMgr()->GetMQTTPass()
+  );
+  logger.Log("MQTT initialized");
+
+  logger.Log("System initialized");
 }
 
-void loop()
-{
-  // Обработка ошибок подключения
-  /*if (!wifi.IsConnected())
-  {
+void loop() {
+  if (!wifi->IsConnected()) {
     logger.Error("WiFi disconnected");
   }
 
-  // Выполнение основных циклов
   enc.Loop();
-  deviceStates.Loop();
-  display.Loop();
-  wifi.Loop();
-  haMqtt.loop();
+  deviceStates->Loop();
+  display->Loop();
+  wifi->Loop();
+  haMqtt->loop();
 
-  delay(10); // Небольшая задержка для стабильности*/
+  delay(10);
 }
