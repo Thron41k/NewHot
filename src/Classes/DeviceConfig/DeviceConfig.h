@@ -19,15 +19,18 @@ public:
     template <typename T>
     void SetParametre(T value, ParametreType type)
     {
+        bool updateNow = false;
         if constexpr (std::is_same<T, std::string>::value)
         {
             switch (type)
             {
             case WiFiPass:
                 strcpy(_config.WIFI_PASS, value.c_str());
+                updateNow = true;
                 break;
             case WiFiSSID:
                 strcpy(_config.WIFI_SSID, value.c_str());
+                updateNow = true;
                 break;
             case MQTT_IP:
                 _config.MQTT_IP.fromString(value.c_str());
@@ -71,7 +74,10 @@ public:
                 _config.mode = static_cast<ModeType>(value);
             }
         }
-        _file_data->update();
+        if (updateNow)
+            _file_data->updateNow();
+        else
+            _file_data->update();
     };
     Configuration GetConfig() { return _config; }
     void Loop();

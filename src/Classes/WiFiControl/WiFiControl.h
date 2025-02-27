@@ -21,6 +21,12 @@ private:
   bool _wifiInitialized = false;
   char _ssidBuffer[33]; // Буфер для хранения SSID
   char _ipBuffer[16];
+  bool _scanInProgress = false;          // Флаг выполнения сканирования
+  std::vector<NetworkInfo> _scanResults; // Результаты сканирования
+  bool _wasAP = false;                   // Флаг предыдущего режима AP
+  char _apSSID[33];                      // Сохранение SSID точки доступа
+  char _apPassword[64];
+  void restoreAP();
 
 public:
   WiFiControl(IConfigManager &configMgr, std::unique_ptr<IWiFiStrategy> strategy);
@@ -34,6 +40,9 @@ public:
   void switchToAP();
   const char *GetSSID() const override; // Изменяем на const char*
   const char *GetIP() const override;
+  void startScan() override;
+  bool isScanComplete() const override;
+  std::vector<NetworkInfo> getScanResults() const override;
 };
 
 #endif

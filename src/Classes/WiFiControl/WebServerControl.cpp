@@ -73,23 +73,61 @@ void WebServerControl::setupRoutes()
 
         <script>
           function scanNetworks() {
-            fetch('/networks')
-              .then(response => response.json())
-              .then(networks => {
-                const select = document.getElementById('ssidSelect');
-                const list = document.getElementById('networksList');
-                select.innerHTML = '';
-                list.innerHTML = 'Available Networks:<br>';
-                networks.forEach(network => {
-                  const option = document.createElement('option');
-                  option.value = network.ssid;
-                  option.text = `${network.ssid} (${network.rssi} dBm)`;
-                  select.appendChild(option);
-                  list.innerHTML += `${network.ssid} (${network.rssi} dBm)<br>`;
-                });
-              })
-              .catch(() => alert('Error scanning networks'));
-          }
+        fetch('/networks')
+          .then(response => {
+            if (response.status === 202) {
+              alert('Scanning started, AP will reconnect shortly');
+              setTimeout(checkScanResults, 10000); // Увеличиваем задержку для восстановления AP
+            } else if (response.status === 503) {
+              alert('WiFi not ready');
+            } else {
+              return response.json();
+            }
+          })
+          .then(networks => {
+            if (networks) {
+              const select = document.getElementById('ssidSelect');
+              const list = document.getElementById('networksList');
+              select.innerHTML = '';
+              list.innerHTML = 'Available Networks:<br>';
+              networks.forEach(network => {
+                const option = document.createElement('option');
+                option.value = network.ssid;
+                option.text = `${network.ssid} (${network.rssi} dBm)`;
+                select.appendChild(option);
+                list.innerHTML += `${network.ssid} (${network.rssi} dBm)<br>`;
+              });
+            }
+          })
+          .catch(() => alert('Error scanning networks'));
+      }
+
+      function checkScanResults() {
+        fetch('/networks')
+          .then(response => {
+            if (response.status === 202) {
+              setTimeout(checkScanResults, 10000);
+            } else {
+              return response.json();
+            }
+          })
+          .then(networks => {
+            if (networks) {
+              const select = document.getElementById('ssidSelect');
+              const list = document.getElementById('networksList');
+              select.innerHTML = '';
+              list.innerHTML = 'Available Networks:<br>';
+              networks.forEach(network => {
+                const option = document.createElement('option');
+                option.value = network.ssid;
+                option.text = `${network.ssid} (${network.rssi} dBm)`;
+                select.appendChild(option);
+                list.innerHTML += `${network.ssid} (${network.rssi} dBm)<br>`;
+              });
+            }
+          })
+          .catch(() => setTimeout(checkScanResults, 2000));
+      }
 
           function updateStatus() {
             fetch('/status')
@@ -136,35 +174,32 @@ void WebServerControl::setupRoutes()
 
   _webserver->on("/networks", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
-    std::vector<NetworkInfo> networks = _wifiManager.ScanNetworks();
-    String json = "[";
-    for (size_t i = 0; i < networks.size(); i++) {
-      json += "{\"ssid\":\"" + String(networks[i].ssid.c_str()) + "\",\"rssi\":" + String(networks[i].rssi) + "}";
-      if (i < networks.size() - 1) json += ",";
-    }
-    json += "]";
-    request->send(200, "application/json", json); });
+      Serial.println("Handling /networks request");
+      if (!_wifiManager.isWifiReady()) {
+        request->send(503, "text/plain", "WiFi not ready");
+        Serial.println("WiFi not ready");
+        return;
+      }
+      if (!_wifiManager.isScanComplete()) {
+        _wifiManager.startScan();
+        request->send(202, "text/plain", "Scanning in progress, AP will reconnect shortly...");
+        Serial.println("Scan in progress");
+      } else {
+        std::vector<NetworkInfo> networks = _wifiManager.getScanResults();
+        String json = "[";
+        for (size_t i = 0; i < networks.size(); i++) {
+          json += "{\"ssid\":\"" + String(networks[i].ssid.c_str()) + "\",\"rssi\":" + String(networks[i].rssi) + "}";
+          if (i < networks.size() - 1) json += ",";
+        }
+        json += "]";
+        request->send(200, "application/json", json);
+        Serial.println("Sent /networks response");
+      } });
 
   _webserver->on("/status", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
-      Serial.println("Handling /status request");
-      Serial.print("Free heap before GetStatusJson: ");
-      Serial.println(ESP.getFreeHeap());
-  
-      // Проверка целостности
-      if (this == nullptr) {
-        Serial.println("WebServerControl this is null!");
-        request->send(500, "text/plain", "Internal error: null this");
-        return;
-      }
-  
-      Serial.println("Calling GetStatusJson");
-      const char* json = _statusProvider.GetStatusJson();
-      Serial.println("Got JSON from StatusProvider: ");
-      Serial.println(json);
-  
-      request->send(200, "application/json", json);
-      Serial.println("Sent /status response"); });
+    const char *json = _statusProvider.GetStatusJson();
+    request->send(200, "application/json", json); });
   _webserver->on("/connect", HTTP_POST, [this](AsyncWebServerRequest *request)
                  {
     if (!request->hasParam("ssid", true) || !request->hasParam("password", true)) {
@@ -203,10 +238,8 @@ void WebServerControl::Loop()
     ESP.restart();
   }
   if (_wifiManager.isWifiReady() && _dnsState)
-  { // Проверяем состояние DNS
-    Serial.println("DNS state: 1");
+  {
     _dnsserver->processNextRequest();
-    Serial.println("DNS state: 2");
   }
 }
 

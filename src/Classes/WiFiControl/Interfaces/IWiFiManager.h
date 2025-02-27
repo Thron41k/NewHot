@@ -18,6 +18,9 @@ public:
     virtual void Loop() = 0;
     virtual bool isWifiReady() const = 0;
     virtual ~IWiFiManager() = default;
+    virtual void startScan() = 0;
+    virtual bool isScanComplete() const = 0;
+    virtual std::vector<NetworkInfo> getScanResults() const = 0;
 };
 
 #endif
