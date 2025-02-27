@@ -3,21 +3,15 @@
 
 #include "Interfaces/IWiFiManager.h"
 #include "Interfaces/IStatusProvider.h"
-
-class StatusProvider : public IStatusProvider {
+#include <Arduino.h>
+class StatusProvider : public IStatusProvider
+{
 private:
-  const IWiFiManager& _wifiManager;
-public:
-  StatusProvider(const IWiFiManager& wifiManager) : _wifiManager(wifiManager) {}
-  String GetStatusJson() const override {
-    String json = "{";
-    json += "\"wifi_mode\":\"" + String(_wifiManager.IsConnected() ? "STA" : "AP") + "\",";
-    json += "\"wifi_status\":\"" + String(_wifiManager.IsConnected() ? "Connected" : "Disconnected") + "\",";
-    json += "\"ssid\":\"" + _wifiManager.GetSSID() + "\",";
-    json += "\"ip\":\"" + _wifiManager.GetIP().toString() + "\"";
-    json += "}";
-    return json;
-  }
-};
+  const IWiFiManager &_wifiManager;
+  mutable char _jsonBuffer[512];
 
+public:
+  StatusProvider(const IWiFiManager &wifiManager) : _wifiManager(wifiManager) {}
+  const char *GetStatusJson() const override;
+};
 #endif

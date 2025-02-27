@@ -14,23 +14,26 @@
 class WiFiControl : public IWiFiManager
 {
 private:
-    std::unique_ptr<IWiFiStrategy> _strategy;
-    std::unique_ptr<IWebServer> _webServer;
-    IConfigManager &_configMgr;
-    uint32_t _lastConnection;
-    bool _wifiInitialized = false;
+  std::unique_ptr<IWiFiStrategy> _strategy;
+  std::unique_ptr<IWebServer> _webServer;
+  IConfigManager &_configMgr;
+  uint32_t _lastConnection;
+  bool _wifiInitialized = false;
+  char _ssidBuffer[33]; // Буфер для хранения SSID
+  char _ipBuffer[16];
 
 public:
-    WiFiControl(IConfigManager &configMgr, std::unique_ptr<IWiFiStrategy> strategy);
-    void init();
-    void setWebServer(std::unique_ptr<IWebServer> webServer);
-    bool ConnectToAP(const std::string &ssid, const std::string &password) override;
-    std::vector<NetworkInfo> ScanNetworks() override;
-    bool IsConnected() const override { return WiFi.status() == WL_CONNECTED; }
-    String GetSSID() const override { return WiFi.SSID(); }
-    IPAddress GetIP() const override { return WiFi.localIP(); }
-    void Loop() override;
-    bool isWifiReady() const override; // Реализация метода интерфейса
+  WiFiControl(IConfigManager &configMgr, std::unique_ptr<IWiFiStrategy> strategy);
+  void init();
+  void setWebServer(std::unique_ptr<IWebServer> webServer);
+  bool ConnectToAP(const std::string &ssid, const std::string &password) override;
+  std::vector<NetworkInfo> ScanNetworks() override;
+  bool IsConnected() const override { return WiFi.status() == WL_CONNECTED; }
+  void Loop() override;
+  bool isWifiReady() const override; // Реализация метода интерфейса
+  void switchToAP();
+  const char *GetSSID() const override; // Изменяем на const char*
+  const char *GetIP() const override;
 };
 
 #endif

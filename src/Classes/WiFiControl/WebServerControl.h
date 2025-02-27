@@ -8,6 +8,7 @@
 #include "Interfaces/IWiFiManager.h"
 #include "Interfaces/IStatusProvider.h"
 #include <Classes/DeviceStates/ConfigManager.h>
+#include "StatusProvider.h"
 
 class WebServerControl : public IWebServer {
 private:
@@ -15,14 +16,14 @@ private:
   std::unique_ptr<DNSServer> _dnsserver;
   IWiFiManager& _wifiManager;
   IConfigManager& _configMgr;
-  const IStatusProvider& _statusProvider;
+  StatusProvider _statusProvider;
   bool _dnsState = false;
   bool _shouldReboot = false;
 
   void setupRoutes(); // Настройка маршрутов
 
 public:
-  WebServerControl(IWiFiManager& wifiManager, IConfigManager& configMgr, const IStatusProvider& statusProvider);
+  WebServerControl(IWiFiManager& wifiManager, IConfigManager& configMgr, StatusProvider statusProvider);
   void init(); // Инициализация сервера
   void StartDNS() override;
   void StopDNS() override;

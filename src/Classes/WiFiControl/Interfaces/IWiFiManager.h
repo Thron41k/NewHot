@@ -13,8 +13,8 @@ public:
     virtual bool ConnectToAP(const std::string &ssid, const std::string &password) = 0; // Оставляем неконстантным
     virtual std::vector<NetworkInfo> ScanNetworks() = 0;
     virtual bool IsConnected() const = 0;
-    virtual String GetSSID() const = 0;
-    virtual IPAddress GetIP() const = 0;
+    virtual const char *GetSSID() const = 0;
+    virtual const char *GetIP() const = 0;
     virtual void Loop() = 0;
     virtual bool isWifiReady() const = 0;
     virtual ~IWiFiManager() = default;

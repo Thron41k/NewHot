@@ -7,7 +7,8 @@ class ConfigManager : public IConfigManager {
 private:
   std::unique_ptr<DeviceConfig> _config;
 public:
-  ConfigManager() : _config(std::make_unique<DeviceConfig>()) {}
+  ConfigManager(){};
+  void init();
   ModeType GetMode() const override { return _config->GetConfig().mode; }
   void SetMode(ModeType mode) override { _config->SetParametre(mode, Mode); }
   float GetTargetHomeTemp() const override { return _config->GetConfig().homeTargetTemp; }
@@ -21,8 +22,6 @@ public:
     _config->SetParametre(pass, WiFiPass);
   }
   IPAddress GetMQTTIP() const override { 
-    Serial.println("GetMQTTIP");
-    Serial.println(_config->GetConfig().MQTT_IP);
     return _config->GetConfig().MQTT_IP;
    }
   void SetMQTTIP(const std::string& ip) override { _config->SetParametre(ip, MQTT_IP); }

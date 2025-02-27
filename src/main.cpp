@@ -40,6 +40,7 @@ void setup() {
   logger.Log("ValveManager initialized");
 
   configMgr = std::make_unique<ConfigManager>();
+  configMgr->init();
   delay(10);
   logger.Log("ConfigManager initialized");
 
@@ -55,18 +56,24 @@ void setup() {
   delay(10);
   logger.Log("DisplayController initialized");
 
-  // Создаем WiFiControl без WebServerControl
   wifi = new WiFiControl(*deviceStates->getConfigMgr(), std::make_unique<WiFiSTAStrategy>());
-  wifi->init(); // Инициализируем подключение
+  wifi->init();
   delay(10);
   logger.Log("WiFiControl initialized");
 
-  // Создаем и добавляем WebServerControl после WiFiControl
-  std::unique_ptr<WebServerControl> webServer = std::make_unique<WebServerControl>(*wifi, *deviceStates->getConfigMgr(), StatusProvider(*wifi));
-  webServer->init(); // Инициализируем сервер
+  Serial.println("Creating StatusProvider");
+  StatusProvider provider(*wifi);
+  Serial.print("StatusProvider created, heap: ");
+  Serial.println(ESP.getFreeHeap());
+
+  Serial.println("Creating WebServerControl");
+  std::unique_ptr<WebServerControl> webServer = std::make_unique<WebServerControl>(*wifi, *deviceStates->getConfigMgr(), provider);
+  webServer->init();
   wifi->setWebServer(std::move(webServer));
   delay(10);
   logger.Log("WebServerControl added to WiFiControl");
+  Serial.print("Heap after WebServerControl: ");
+  Serial.println(ESP.getFreeHeap());
 
   uint8_t mac[6];
   WiFi.macAddress(mac);
@@ -93,7 +100,7 @@ void setup() {
 
 void loop() {
   if (!wifi->IsConnected()) {
-    logger.Error("WiFi disconnected");
+    //logger.Error("WiFi disconnected");
   }
 
   enc.Loop();

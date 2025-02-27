@@ -4,7 +4,7 @@
 #include "Configuration.h"
 #include "ParametreType.h"
 #include "FileData.h"
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <Classes/Helpers/Defines.h>
 
 class DeviceConfig
