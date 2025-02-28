@@ -11,38 +11,29 @@
 #include "Interfaces/IWiFiStrategy.h"
 #include "Interfaces/IWebServer.h"
 
-class WiFiControl : public IWiFiManager
-{
-private:
-  std::unique_ptr<IWiFiStrategy> _strategy;
-  std::unique_ptr<IWebServer> _webServer;
-  IConfigManager &_configMgr;
-  uint32_t _lastConnection;
-  bool _wifiInitialized = false;
-  char _ssidBuffer[33]; // Буфер для хранения SSID
-  char _ipBuffer[16];
-  bool _scanInProgress = false;          // Флаг выполнения сканирования
-  std::vector<NetworkInfo> _scanResults; // Результаты сканирования
-  bool _wasAP = false;                   // Флаг предыдущего режима AP
-  char _apSSID[33];                      // Сохранение SSID точки доступа
-  char _apPassword[64];
-  void restoreAP();
-
-public:
-  WiFiControl(IConfigManager &configMgr, std::unique_ptr<IWiFiStrategy> strategy);
-  void init();
-  void setWebServer(std::unique_ptr<IWebServer> webServer);
-  bool ConnectToAP(const std::string &ssid, const std::string &password) override;
-  std::vector<NetworkInfo> ScanNetworks() override;
-  bool IsConnected() const override { return WiFi.status() == WL_CONNECTED; }
-  void Loop() override;
-  bool isWifiReady() const override; // Реализация метода интерфейса
-  void switchToAP();
-  const char *GetSSID() const override; // Изменяем на const char*
-  const char *GetIP() const override;
-  void startScan() override;
-  bool isScanComplete() const override;
-  std::vector<NetworkInfo> getScanResults() const override;
-};
-
+class WiFiControl : public IWiFiManager {
+  private:
+    std::unique_ptr<IWiFiStrategy> _strategy;
+    std::unique_ptr<IWebServer> _webServer;
+    IConfigManager& _configMgr;
+    uint32_t _lastConnection;
+    bool _wifiInitialized = false;
+    char _ssidBuffer[33];
+    char _ipBuffer[16];
+  
+  public:
+    WiFiControl(IConfigManager& configMgr, std::unique_ptr<IWiFiStrategy> strategy);
+    void init();
+    void setWebServer(std::unique_ptr<IWebServer> webServer);
+    bool ConnectToAP(const std::string& ssid, const std::string& password) override;
+    std::vector<NetworkInfo> ScanNetworks() override;
+    bool IsConnected() const override { return WiFi.status() == WL_CONNECTED; }
+    const char* GetSSID() const override;
+    const char* GetIP() const override;
+    void Loop() override;
+    bool isWifiReady() const override;
+    void startScan() override {} // Оставляем пустым, так как не используется
+    bool isScanComplete() const override { return false; } // Не используется
+    std::vector<NetworkInfo> getScanResults() const override { return std::vector<NetworkInfo>(); } // Не используется
+  };
 #endif

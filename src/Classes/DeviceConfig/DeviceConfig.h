@@ -20,26 +20,35 @@ public:
     void SetParametre(T value, ParametreType type)
     {
         bool updateNow = false;
-        if constexpr (std::is_same<T, std::string>::value)
+        if constexpr (std::is_same<T, const char *>::value)
         {
             switch (type)
             {
             case WiFiPass:
-                strcpy(_config.WIFI_PASS, value.c_str());
+                strcpy(_config.WIFI_PASS, value);
                 updateNow = true;
                 break;
             case WiFiSSID:
-                strcpy(_config.WIFI_SSID, value.c_str());
+                strcpy(_config.WIFI_SSID, value);
                 updateNow = true;
                 break;
+            }
+        }
+        else if constexpr (std::is_same<T, std::string>::value)
+        {
+            switch (type)
+            {
             case MQTT_IP:
                 _config.MQTT_IP.fromString(value.c_str());
+                updateNow = true;
                 break;
             case MQTT_Pass:
                 strcpy(_config.MQTT_Pass, value.c_str());
+                updateNow = true;
                 break;
             case MQTT_User:
                 strcpy(_config.MQTT_User, value.c_str());
+                updateNow = true;
                 break;
             }
         }
@@ -64,6 +73,7 @@ public:
                 break;
             case MQTT_Port:
                 _config.MQTT_Port = value;
+                updateNow = true;
                 break;
             }
         }

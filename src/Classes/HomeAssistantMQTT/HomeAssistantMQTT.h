@@ -37,13 +37,10 @@ public:
     }
 
     void begin(const std::string& mqttIP, const std::string& mqttUser, const std::string& mqttPass) {
-        Serial.println("HomeAssistantMQTT 1");
-        Serial.println(mqttIP.c_str());
-        Serial.println("HomeAssistantMQTT 2");
-        Serial.println(mqttUser.c_str());
-        Serial.println("HomeAssistantMQTT 3");
-        Serial.println(mqttPass.c_str());
-        //_hamqtt->begin(mqttIP.c_str(), mqttUser.c_str(), mqttPass.c_str());
+        Serial.print("MQTT IP: "); Serial.println(mqttIP.c_str());
+        Serial.print("MQTT User: "); Serial.println(mqttUser.c_str());
+        Serial.print("MQTT Pass: "); Serial.println(mqttPass.c_str());
+        _hamqtt->begin(mqttIP.c_str(), mqttUser.c_str(), mqttPass.c_str());
     }
 
     void loop() {

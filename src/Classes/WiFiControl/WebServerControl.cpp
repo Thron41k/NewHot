@@ -26,14 +26,15 @@ void WebServerControl::setupRoutes()
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; color: #333; }
           h1 { color: #2c3e50; }
+          h2 { color: #2c3e50; margin-top: 20px; }
           .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
           .form-group { margin-bottom: 15px; }
           label { display: block; margin-bottom: 5px; font-weight: bold; }
           select, input[type="text"], input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
           button { background: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
           button:hover { background: #2980b9; }
-          #status { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #ecf0f1; }
-          #networksList { margin-top: 10px; }
+          button:disabled { background: #cccccc; cursor: not-allowed; }
+          #status { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #ecf0f1; }
         </style>
       </head>
       <body>
@@ -41,9 +42,13 @@ void WebServerControl::setupRoutes()
           <h1>Smart Boiler Setup</h1>
 
           <div class="form-group">
+            <h2>Wi-Fi Status</h2>
+            <div id="status">Status: Loading...</div>
+          </div>
+
+          <div class="form-group">
             <h2>Wi-Fi Settings</h2>
-            <button onclick=\"scanNetworks()\">Scan Networks</button>
-            <div id="networksList"></div>
+            <button id="scanButton" onclick=scanNetworks() disabled>Scan Networks</button>
             <form id="wifiForm">
               <label>Wi-Fi Network:</label>
               <select name="ssid" id="ssidSelect"></select>
@@ -67,67 +72,64 @@ void WebServerControl::setupRoutes()
               <button type="submit">Save</button>
             </form>
           </div>
-
-          <div id="status">Status: Loading...</div>
         </div>
 
         <script>
-          function scanNetworks() {
-        fetch('/networks')
-          .then(response => {
-            if (response.status === 202) {
-              alert('Scanning started, AP will reconnect shortly');
-              setTimeout(checkScanResults, 10000); // Увеличиваем задержку для восстановления AP
-            } else if (response.status === 503) {
-              alert('WiFi not ready');
-            } else {
-              return response.json();
-            }
-          })
-          .then(networks => {
-            if (networks) {
-              const select = document.getElementById('ssidSelect');
-              const list = document.getElementById('networksList');
-              select.innerHTML = '';
-              list.innerHTML = 'Available Networks:<br>';
-              networks.forEach(network => {
-                const option = document.createElement('option');
-                option.value = network.ssid;
-                option.text = `${network.ssid} (${network.rssi} dBm)`;
-                select.appendChild(option);
-                list.innerHTML += `${network.ssid} (${network.rssi} dBm)<br>`;
-              });
-            }
-          })
-          .catch(() => alert('Error scanning networks'));
-      }
+          let scanInterval;
 
-      function checkScanResults() {
-        fetch('/networks')
-          .then(response => {
-            if (response.status === 202) {
-              setTimeout(checkScanResults, 10000);
-            } else {
-              return response.json();
-            }
-          })
-          .then(networks => {
-            if (networks) {
-              const select = document.getElementById('ssidSelect');
-              const list = document.getElementById('networksList');
-              select.innerHTML = '';
-              list.innerHTML = 'Available Networks:<br>';
-              networks.forEach(network => {
-                const option = document.createElement('option');
-                option.value = network.ssid;
-                option.text = `${network.ssid} (${network.rssi} dBm)`;
-                select.appendChild(option);
-                list.innerHTML += `${network.ssid} (${network.rssi} dBm)<br>`;
+          function updateNetworks() {
+            fetch('/networks')
+              .then(response => response.json())
+              .then(networks => {
+                const select = document.getElementById('ssidSelect');
+                const scanButton = document.getElementById('scanButton');
+                select.innerHTML = '';
+                if (networks.length === 0) {
+                  select.disabled = true;
+                  select.innerHTML = '<option selected>Поиск сетей...</option>';
+                  scanButton.disabled = true;
+                  if (!scanInterval) {
+                    scanInterval = setInterval(updateNetworks, 5000); // Запускаем интервал
+                  }
+                } else {
+                  select.disabled = false;
+                  scanButton.disabled = false;
+                  networks.forEach(network => {
+                    const option = document.createElement('option');
+                    option.value = network.ssid;
+                    option.text = `${network.ssid} (${network.rssi} dBm)`;
+                    select.appendChild(option);
+                  });
+                  if (scanInterval) {
+                    clearInterval(scanInterval); // Останавливаем интервал
+                    scanInterval = null;
+                  }
+                }
+              })
+              .catch(() => {
+                const select = document.getElementById('ssidSelect');
+                const scanButton = document.getElementById('scanButton');
+                select.disabled = true;
+                select.innerHTML = '<option selected>Поиск сетей...</option>';
+                scanButton.disabled = true;
+                if (!scanInterval) {
+                  scanInterval = setInterval(updateNetworks, 5000);
+                }
               });
+          }
+
+          function scanNetworks() {
+            const select = document.getElementById('ssidSelect');
+            const scanButton = document.getElementById('scanButton');
+            select.innerHTML = '<option selected>Поиск сетей...</option>';
+            select.disabled = true;
+            scanButton.disabled = true;
+            if (scanInterval) {
+              clearInterval(scanInterval); // Очищаем существующий интервал
             }
-          })
-          .catch(() => setTimeout(checkScanResults, 2000));
-      }
+            scanInterval = setInterval(updateNetworks, 5000); // Запускаем новый интервал
+            updateNetworks(); // Немедленный запрос
+          }
 
           function updateStatus() {
             fetch('/status')
@@ -163,7 +165,7 @@ void WebServerControl::setupRoutes()
             .catch(() => alert('Error saving MQTT settings'));
           };
 
-          scanNetworks();
+          updateNetworks();
           updateStatus();
           setInterval(updateStatus, 5000);
         </script>
@@ -180,21 +182,15 @@ void WebServerControl::setupRoutes()
         Serial.println("WiFi not ready");
         return;
       }
-      if (!_wifiManager.isScanComplete()) {
-        _wifiManager.startScan();
-        request->send(202, "text/plain", "Scanning in progress, AP will reconnect shortly...");
-        Serial.println("Scan in progress");
-      } else {
-        std::vector<NetworkInfo> networks = _wifiManager.getScanResults();
-        String json = "[";
-        for (size_t i = 0; i < networks.size(); i++) {
-          json += "{\"ssid\":\"" + String(networks[i].ssid.c_str()) + "\",\"rssi\":" + String(networks[i].rssi) + "}";
-          if (i < networks.size() - 1) json += ",";
-        }
-        json += "]";
-        request->send(200, "application/json", json);
-        Serial.println("Sent /networks response");
-      } });
+      String json = "[";
+      std::vector<NetworkInfo> networks = _wifiManager.ScanNetworks();
+      for (size_t i = 0; i < networks.size(); i++) {
+        if (i) json += ",";
+        json += "{\"ssid\":\"" + String(networks[i].ssid.c_str()) + "\",\"rssi\":" + String(networks[i].rssi) + "}";
+      }
+      json += "]";
+      request->send(200, "application/json", json);
+      Serial.println("Sent /networks response"); });
 
   _webserver->on("/status", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
@@ -227,7 +223,8 @@ void WebServerControl::setupRoutes()
     _configMgr.SetMQTTPort(request->getParam("port", true)->value().toInt());
     _configMgr.SetMQTTUser(request->getParam("user", true)->value().c_str());
     _configMgr.SetMQTTPass(request->getParam("password", true)->value().c_str());
-    request->send(200, "text/plain", "MQTT settings saved"); });
+    request->send(200, "text/plain", "MQTT settings saved"); 
+    _shouldReboot = true; });
 }
 
 void WebServerControl::Loop()
