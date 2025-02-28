@@ -25,12 +25,16 @@ public:
         _airValve->onCommand([this](HANumeric number, HANumber* sender) {
             if (number.isSet()) {
                 _valveManager.SetPercent(number.toInt8());
+                sender->setState(number.toInt8());
             }
         });
     }
+    void Set(short percent)  override {
+        _airValve->setState(percent);
+    }
 
     void loop() override {
-        // Обновление состояния клапана (если нужно)
+       
     }
 };
 

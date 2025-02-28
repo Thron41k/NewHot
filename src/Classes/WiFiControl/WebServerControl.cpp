@@ -1,4 +1,5 @@
 #include "WebServerControl.h"
+#include <Update.h>
 
 WebServerControl::WebServerControl(IWiFiManager &wifiManager, IConfigManager &configMgr, StatusProvider statusProvider)
     : _webserver(std::make_unique<AsyncWebServer>(80)), _dnsserver(std::make_unique<DNSServer>()),
@@ -30,7 +31,7 @@ void WebServerControl::setupRoutes()
           .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
           .form-group { margin-bottom: 15px; }
           label { display: block; margin-bottom: 5px; font-weight: bold; }
-          select, input[type="text"], input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+          select, input[type="text"], input[type="password"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
           button { background: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
           button:hover { background: #2980b9; }
           button:disabled { background: #cccccc; cursor: not-allowed; }
@@ -72,6 +73,17 @@ void WebServerControl::setupRoutes()
               <button type="submit">Save</button>
             </form>
           </div>
+
+          <div class="form-group">
+            <h2>Firmware Update</h2>
+            <form id="updateForm" enctype="multipart/form-data">
+              <label>Password:</label>
+              <input type="password" name="updatePassword" required>
+              <label>Firmware File:</label>
+              <input type="file" name="updateFile" accept=".bin" required>
+              <button type="submit">Update</button>
+            </form>
+          </div>
         </div>
 
         <script>
@@ -88,9 +100,7 @@ void WebServerControl::setupRoutes()
                   select.disabled = true;
                   select.innerHTML = '<option selected>Поиск сетей...</option>';
                   scanButton.disabled = true;
-                  if (!scanInterval) {
-                    scanInterval = setInterval(updateNetworks, 5000); // Запускаем интервал
-                  }
+                  if (!scanInterval) scanInterval = setInterval(updateNetworks, 5000);
                 } else {
                   select.disabled = false;
                   scanButton.disabled = false;
@@ -101,7 +111,7 @@ void WebServerControl::setupRoutes()
                     select.appendChild(option);
                   });
                   if (scanInterval) {
-                    clearInterval(scanInterval); // Останавливаем интервал
+                    clearInterval(scanInterval);
                     scanInterval = null;
                   }
                 }
@@ -112,9 +122,7 @@ void WebServerControl::setupRoutes()
                 select.disabled = true;
                 select.innerHTML = '<option selected>Поиск сетей...</option>';
                 scanButton.disabled = true;
-                if (!scanInterval) {
-                  scanInterval = setInterval(updateNetworks, 5000);
-                }
+                if (!scanInterval) scanInterval = setInterval(updateNetworks, 5000);
               });
           }
 
@@ -124,11 +132,9 @@ void WebServerControl::setupRoutes()
             select.innerHTML = '<option selected>Поиск сетей...</option>';
             select.disabled = true;
             scanButton.disabled = true;
-            if (scanInterval) {
-              clearInterval(scanInterval); // Очищаем существующий интервал
-            }
-            scanInterval = setInterval(updateNetworks, 5000); // Запускаем новый интервал
-            updateNetworks(); // Немедленный запрос
+            if (scanInterval) clearInterval(scanInterval);
+            scanInterval = setInterval(updateNetworks, 5000);
+            updateNetworks();
           }
 
           function updateStatus() {
@@ -165,6 +171,21 @@ void WebServerControl::setupRoutes()
             .catch(() => alert('Error saving MQTT settings'));
           };
 
+          document.getElementById('updateForm').onsubmit = function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/update', {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.text())
+            .then(text => {
+              alert(text);
+              if (text.includes('Success')) setTimeout(() => location.reload(), 3000);
+            })
+            .catch(() => alert('Error updating firmware'));
+          };
+
           updateNetworks();
           updateStatus();
           setInterval(updateStatus, 5000);
@@ -173,7 +194,42 @@ void WebServerControl::setupRoutes()
       </html>
     )";
     request->send(200, "text/html", html); });
+  _webserver->on("/update", HTTP_POST, [this](AsyncWebServerRequest *request)
+                 {
+                   if (!request->hasParam("updatePassword", true) || !request->hasParam("updateFile", true, true))
+                   {
+                     request->send(400, "text/plain", "Invalid request: Password or file missing");
+                     return;
+                   }
 
+                   String password = request->getParam("updatePassword", true)->value();
+                   if (password != FIRMWARE_UPDATE_PASSWORD)
+                   {
+                     request->send(401, "text/plain", "Invalid password");
+                     return;
+                   }
+
+                   request->send(200, "text/plain", "Update started...");
+                   _shouldReboot = true; // Устанавливаем флаг перезагрузки после успешного обновления
+                 },
+                 [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+                 {
+      if (!index) {
+        Serial.println("Firmware update started");
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+          Update.printError(Serial);
+        }
+      }
+      if (Update.write(data, len) != len) {
+        Update.printError(Serial);
+      }
+      if (final) {
+        if (Update.end(true)) {
+          Serial.println("Firmware update successful");
+        } else {
+          Update.printError(Serial);
+        }
+      } });
   _webserver->on("/networks", HTTP_GET, [this](AsyncWebServerRequest *request)
                  {
       Serial.println("Handling /networks request");

@@ -8,7 +8,8 @@
 #include <vector>
 #include "Interfaces/IMQTTDevice.h"
 
-class HomeAssistantMQTT {
+class HomeAssistantMQTT
+{
 private:
     WiFiClient _client;
     std::unique_ptr<HADevice> _hadevice;
@@ -16,12 +17,14 @@ private:
     std::vector<std::unique_ptr<IMQTTDevice>> _devices;
 
     // Преобразует строку в массив байтов
-    std::vector<byte> stringToByteArray(const std::string& str) {
+    std::vector<byte> stringToByteArray(const std::string &str)
+    {
         return std::vector<byte>(str.begin(), str.end());
     }
 
 public:
-    HomeAssistantMQTT(const std::string& deviceName, const std::string& uniqueId) {
+    HomeAssistantMQTT(const std::string &deviceName, const std::string &uniqueId)
+    {
         _hadevice = std::make_unique<HADevice>();
         _hamqtt = std::make_unique<HAMqtt>(_client, *_hadevice);
         _hadevice->setName(deviceName.c_str());
@@ -31,20 +34,26 @@ public:
         _hadevice->setUniqueId(uniqueIdBytes.data(), uniqueIdBytes.size());
     }
 
-    void addDevice(std::unique_ptr<IMQTTDevice> device) {
+    void addDevice(std::unique_ptr<IMQTTDevice> device)
+    {
         device->setup(*_hadevice, *_hamqtt);
         _devices.push_back(std::move(device));
     }
 
-    void begin(const std::string& mqttIP, const std::string& mqttUser, const std::string& mqttPass) {
-        Serial.print("MQTT IP: "); Serial.println(mqttIP.c_str());
-        Serial.print("MQTT User: "); Serial.println(mqttUser.c_str());
-        Serial.print("MQTT Pass: "); Serial.println(mqttPass.c_str());
-        _hamqtt->begin(mqttIP.c_str(), mqttUser.c_str(), mqttPass.c_str());
+    void begin(const std::string &mqttIP, const std::string &mqttUser, const std::string &mqttPass)
+    {
+        IPAddress mqttIpl;
+        if (!mqttIpl.fromString(mqttIP.c_str()))
+        {
+            mqttIpl = IPAddress(0, 0, 0, 0);
+        }
+        _hamqtt->begin(mqttIpl, mqttUser.c_str(), mqttPass.c_str());
     }
 
-    void loop() {
-        for (auto& device : _devices) {
+    void loop()
+    {
+        for (auto &device : _devices)
+        {
             device->loop();
         }
         _hamqtt->loop();
