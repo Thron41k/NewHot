@@ -25,6 +25,8 @@ class IConfigManager {
       virtual void SetMQTTPass(const std::string& pass) = 0;
       virtual void Loop() = 0;
       virtual ~IConfigManager() = default;
+      virtual void SetValvePositionPercent(short percent) = 0;
+      virtual short GetValvePositionPercent() const = 0;
     };
 
 #endif

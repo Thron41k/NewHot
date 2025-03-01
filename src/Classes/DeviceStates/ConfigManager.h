@@ -32,6 +32,8 @@ public:
   std::string GetMQTTPass() const override { return _config->GetConfig().MQTT_Pass; }
   void SetMQTTPass(const std::string& pass) override { _config->SetParametre(pass, MQTT_Pass); }
   void Loop() override { _config->Loop(); }
+  void SetValvePositionPercent(short percent) override { _config->SetParametre(percent, ValvePercent); }
+  short GetValvePositionPercent() const override { return _config->GetConfig().valvePercent; }
 };
 
 #endif

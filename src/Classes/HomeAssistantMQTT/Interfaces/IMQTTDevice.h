@@ -9,6 +9,7 @@ public:
     virtual void setup(HADevice& device, HAMqtt& mqtt) = 0;
     virtual void loop() = 0;
     virtual void Set(short percent) = 0;
+    virtual void Report() = 0;
     virtual ~IMQTTDevice() = default;
 };
 

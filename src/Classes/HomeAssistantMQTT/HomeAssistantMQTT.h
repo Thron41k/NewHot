@@ -48,6 +48,10 @@ public:
             mqttIpl = IPAddress(0, 0, 0, 0);
         }
         _hamqtt->begin(mqttIpl, mqttUser.c_str(), mqttPass.c_str());
+        for (auto &device : _devices)
+        {
+            device->Report();
+        }
     }
 
     void loop()

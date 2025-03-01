@@ -68,12 +68,18 @@ public:
         {
             switch (type)
             {
-            case ValvePercent:
-                _config.valvePercent = value;
-                break;
             case MQTT_Port:
                 _config.MQTT_Port = value;
                 updateNow = true;
+                break;
+            }
+        }
+        else if constexpr (std::is_same<T, short>::value)
+        {
+            switch (type)
+            {
+            case ValvePercent:
+                _config.valvePercent = value;
                 break;
             }
         }

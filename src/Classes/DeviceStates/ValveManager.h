@@ -4,15 +4,17 @@
 #include "Classes/DeviceStates/Interfaces/IValveManager.h"
 #include <memory>
 #include <Classes/ValveControl/ValveControl.h>
+#include "Interfaces/IConfigManager.h"
 class ValveManager : public IValveManager
 {
 private:
   std::unique_ptr<ValveControl> _valve;
+  IConfigManager *_configMgr;
 
 public:
-  ValveManager();
-  short GetPercent() const override { return _valve->GetPercent(); }
-  void SetPercent(short percent) override { _valve->SetPercentage(percent); }
+  ValveManager(IConfigManager *configMgr = nullptr);
+  short GetPercent() const override { return _configMgr->GetValvePositionPercent(); }
+  void SetPercent(short percent) override;
 };
 
 #endif

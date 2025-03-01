@@ -1,8 +1,14 @@
 #include "ValveManager.h"
 
-ValveManager::ValveManager()
+ValveManager::ValveManager(IConfigManager *configMgr) : _configMgr(configMgr)
 {
-    Serial.println("ValveManager initialized 0");
     _valve = std::make_unique<ValveControl>();
-    Serial.println("ValveManager initialized 1");
+}
+
+void ValveManager::SetPercent(short percent)
+{
+    _valve->SetPercentage(percent);
+    if (_configMgr && _configMgr->GetMode() == ModeType::Manual) {
+        _configMgr->SetValvePositionPercent(percent);
+      }
 }

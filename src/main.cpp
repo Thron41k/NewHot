@@ -30,20 +30,21 @@ void setup()
 {
   Serial.begin(115200);
   delay(100);
+  logger.Log("SmartBoiler v" + String(FIRMWARE_VERSION) + " started");
   logger.Log("Starting setup");
 
   tempMgr = std::make_unique<TemperatureManager>(logger);
   delay(10);
   logger.Log("TemperatureManager initialized");
 
-  valveMgr = std::make_unique<ValveManager>();
-  delay(10);
-  logger.Log("ValveManager initialized");
-
   configMgr = std::make_unique<ConfigManager>();
   configMgr->init();
   delay(10);
   logger.Log("ConfigManager initialized");
+
+  valveMgr = std::make_unique<ValveManager>(configMgr.get());
+  delay(10);
+  logger.Log("ValveManager initialized");
 
   deviceStates = new DeviceStates(std::move(tempMgr), std::move(valveMgr), std::move(configMgr), enc);
   delay(10);
