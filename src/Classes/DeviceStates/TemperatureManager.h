@@ -42,15 +42,19 @@ public:
 
     void OnTempChanged(float temp) override
     {
+        Serial.println("Temperature changed: " + String(temp));
         for (auto *obs : _observers)
         {
             obs->OnTempChanged(temp);
         }
     }
-    void SetHomeTemperatureSensor(std::unique_ptr<HomeTemperature> sensor)
+    void SetHomeTemperatureSensor(std::unique_ptr<HomeTemperature> sensor) override
     {
-        _homeTempSensor = std::move(sensor);
-        _homeTempSensor->Attach(this);
+        if (sensor)
+        {
+            _homeTempSensor = std::move(sensor);
+            _homeTempSensor->Attach(this);
+        }
     }
 };
 #endif

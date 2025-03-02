@@ -102,7 +102,6 @@ public:
   ITemperatureManager *getTempMgr() const { return _tempManager.get(); }
   IValveManager *getValveMgr() const { return _valveManager.get(); }
   IConfigManager *getConfigMgr() const { 
-    Serial.println("getConfigMgr");
     return _configManager.get(); }
 };
 

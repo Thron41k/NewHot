@@ -5,6 +5,7 @@
 #include "../Helpers/Logger.h"
 #include "Classes/DeviceStates/Interfaces/IMQTTTemperatureSensor.h" // Новый интерфейс
 #include <Classes/Helpers/Observers/ITemperatureObserver.h>
+#include "Classes/HomeAssistantMQTT/MQTTTemperatureSensor.h"
 
 class HomeTemperature : public ITemperatureObserver
 {

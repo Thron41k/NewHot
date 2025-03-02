@@ -1,3 +1,4 @@
+// WebServerControl.cpp
 #include "WebServerControl.h"
 #include <Update.h>
 
@@ -25,69 +26,125 @@ void WebServerControl::setupRoutes()
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; color: #333; }
-          h1 { color: #2c3e50; }
-          h2 { color: #2c3e50; margin-top: 20px; }
-          .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-          .form-group { margin-bottom: 15px; }
+          body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; color: #333; }
+          .container { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+          h1 { color: #2c3e50; text-align: center; }
+          .tabs { overflow: hidden; border-bottom: 1px solid #ccc; }
+          .tab-button { background: #f1f1f1; border: none; outline: none; cursor: pointer; padding: 10px 20px; float: left; width: 50%; text-align: center; transition: 0.3s; }
+          .tab-button:hover { background: #ddd; }
+          .tab-button.active { background: #ccc; }
+          .tab-content { display: none; padding: 20px 0; }
+          .tab-content.active { display: block; }
+          .accordion { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px; }
+          .accordion-header { background: #e9e9e9; padding: 10px; cursor: pointer; font-weight: bold; }
+          .accordion-content { display: none; padding: 10px; }
+          .accordion-content.active { display: block; }
           label { display: block; margin-bottom: 5px; font-weight: bold; }
-          select, input[type="text"], input[type="password"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+          select, input[type="text"], input[type="password"], input[type="file"] { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; }
           button { background: #3498db; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
           button:hover { background: #2980b9; }
           button:disabled { background: #cccccc; cursor: not-allowed; }
-          #status { margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #ecf0f1; }
+          #status { padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: #ecf0f1; }
+          #rebootOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+          #rebootIndicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: white; }
+          .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         </style>
       </head>
       <body>
         <div class="container">
           <h1>Smart Boiler Setup</h1>
 
-          <div class="form-group">
+          <div class="tabs">
+            <button class="tab-button active" onclick=openTab('statusTab')>Status</button>
+            <button class="tab-button" onclick=openTab('settingsTab')>Settings</button>
+          </div>
+
+          <div id="statusTab" class="tab-content active">
             <h2>Wi-Fi Status</h2>
             <div id="status">Status: Loading...</div>
           </div>
 
-          <div class="form-group">
-            <h2>Wi-Fi Settings</h2>
-            <button id="scanButton" onclick=scanNetworks() disabled>Scan Networks</button>
-            <form id="wifiForm">
-              <label>Wi-Fi Network:</label>
-              <select name="ssid" id="ssidSelect"></select>
-              <label>Password:</label>
-              <input type="password" name="password" required>
-              <button type="submit">Connect</button>
-            </form>
-          </div>
+          <div id="settingsTab" class="tab-content">
+            <div class="accordion">
+              <div class="accordion-header" onclick=toggleAccordion(this)>Wi-Fi Settings</div>
+              <div class="accordion-content">
+                <button id="scanButton" onclick=scanNetworks() disabled>Scan Networks</button>
+                <form id="wifiForm">
+                  <label>Wi-Fi Network:</label>
+                  <select name="ssid" id="ssidSelect"></select>
+                  <label>Password:</label>
+                  <input type="password" name="password" required>
+                  <button type="submit">Connect</button>
+                </form>
+              </div>
+            </div>
 
-          <div class="form-group">
-            <h2>MQTT Settings</h2>
-            <form id="mqttForm">
-              <label>Server:</label>
-              <input type="text" name="host" value=")" + _configMgr.GetMQTTIP().toString() + R"(" required>
-              <label>Port:</label>
-              <input type="text" name="port" value=")" + String(_configMgr.GetMQTTPort()) + R"(" required>
-              <label>User:</label>
-              <input type="text" name="user" value=")" + String(_configMgr.GetMQTTUser().c_str()) + R"(">
-              <label>Password:</label>
-              <input type="password" name="password" value=")" + String(_configMgr.GetMQTTPass().c_str()) + R"(">
-              <button type="submit">Save</button>
-            </form>
-          </div>
+            <div class="accordion">
+              <div class="accordion-header" onclick=toggleAccordion(this)>MQTT Settings</div>
+              <div class="accordion-content">
+                <form id="mqttForm">
+                  <label>Server:</label>
+                  <input type="text" name="host" value=")" + _configMgr.GetMQTTIP().toString() + R"(" required>
+                  <label>Port:</label>
+                  <input type="text" name="port" value=")" + String(_configMgr.GetMQTTPort()) + R"(" required>
+                  <label>User:</label>
+                  <input type="text" name="user" value=")" + String(_configMgr.GetMQTTUser().c_str()) + R"(">
+                  <label>Password:</label>
+                  <input type="password" name="password" value=")" + String(_configMgr.GetMQTTPass().c_str()) + R"(">
+                  <label>Home Temperature Topic:</label>
+                  <input type="text" name="homeTempTopic" value=")" + String(_configMgr.GetMQTTHomeTemperatureTopic().c_str()) + R"(" required>
+                  <label>Outdoor Temperature Topic:</label>
+                  <input type="text" name="outdoorTempTopic" value=")" + String(_configMgr.GetMQTTOutdoorTemperatureTopic().c_str()) + R"(" required>
+                  <button type="submit">Save</button>
+                </form>
+              </div>
+            </div>
 
-          <div class="form-group">
-            <h2>Firmware Update</h2>
-            <form id="updateForm" enctype="multipart/form-data">
-              <label>Password:</label>
-              <input type="password" name="updatePassword" required>
-              <label>Firmware File:</label>
-              <input type="file" name="updateFile" accept=".bin" required>
-              <button type="submit">Update</button>
-            </form>
+            <div class="accordion">
+              <div class="accordion-header" onclick=toggleAccordion(this)>Firmware Update</div>
+              <div class="accordion-content">
+                <form id="updateForm" enctype="multipart/form-data">
+                  <label>Password:</label>
+                  <input type="password" name="updatePassword" required>
+                  <label>Firmware File:</label>
+                  <input type="file" name="updateFile" accept=".bin" required>
+                  <button type="submit">Update</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="rebootOverlay">
+          <div id="rebootIndicator">
+            <div class="spinner"></div>
+            <p id="rebootText">Rebooting...</p>
           </div>
         </div>
 
         <script>
           let scanInterval;
+
+          function openTab(tabId) {
+            const tabs = document.getElementsByClassName('tab-content');
+            const buttons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabs.length; i++) {
+              tabs[i].classList.remove('active');
+              buttons[i].classList.remove('active');
+            }
+            document.getElementById(tabId).classList.add('active');
+            document.getElementsByClassName('tab-button')[tabId === 'statusTab' ? 0 : 1].classList.add('active');
+          }
+
+          function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const allContents = document.getElementsByClassName('accordion-content');
+            for (let i = 0; i < allContents.length; i++) {
+              if (allContents[i] !== content) allContents[i].classList.remove('active');
+            }
+            content.classList.toggle('active');
+          }
 
           function updateNetworks() {
             fetch('/networks')
@@ -154,8 +211,11 @@ void WebServerControl::setupRoutes()
             })
             .then(response => response.text())
             .then(text => {
-              alert(text);
-              if (text.includes('Rebooting')) setTimeout(() => updateStatus(), 3000);
+              if (text.includes('Rebooting')) {
+                document.getElementById('rebootOverlay').style.display = 'block';
+                document.getElementById('rebootText').innerHTML = 'Rebooting...';
+                setTimeout(() => location.reload(), 3000);
+              }
             })
             .catch(() => alert('Error connecting to Wi-Fi'));
           };
@@ -166,8 +226,14 @@ void WebServerControl::setupRoutes()
               method: 'POST', 
               body: new FormData(this) 
             })
-            .then(() => alert('MQTT settings saved'))
-            .then(() => updateStatus())
+            .then(response => response.text())
+            .then(text => {
+              if (text.includes('Rebooting')) {
+                document.getElementById('rebootOverlay').style.display = 'block';
+                document.getElementById('rebootText').innerHTML = 'Rebooting...';
+                setTimeout(() => location.reload(), 3000);
+              }
+            })
             .catch(() => alert('Error saving MQTT settings'));
           };
 
@@ -180,8 +246,11 @@ void WebServerControl::setupRoutes()
             })
             .then(response => response.text())
             .then(text => {
-              alert(text);
-              if (text.includes('Success')) setTimeout(() => location.reload(), 3000);
+              if (text.includes('started')) {
+                document.getElementById('rebootOverlay').style.display = 'block';
+                document.getElementById('rebootText').innerHTML = 'Updating firmware...';
+                setTimeout(() => location.reload(), 3000);
+              }
             })
             .catch(() => alert('Error updating firmware'));
           };
@@ -194,6 +263,22 @@ void WebServerControl::setupRoutes()
       </html>
     )";
     request->send(200, "text/html", html); });
+  _webserver->on("/mqtt", HTTP_POST, [this](AsyncWebServerRequest *request)
+                 {
+      if (!request->hasParam("host", true) || !request->hasParam("port", true) || 
+          !request->hasParam("user", true) || !request->hasParam("password", true) ||
+          !request->hasParam("homeTempTopic", true) || !request->hasParam("outdoorTempTopic", true)) {
+        request->send(400, "text/plain", "Invalid request");
+        return;
+      }
+      _configMgr.SetMQTTIP(request->getParam("host", true)->value().c_str());
+      _configMgr.SetMQTTPort(request->getParam("port", true)->value().toInt());
+      _configMgr.SetMQTTUser(request->getParam("user", true)->value().c_str());
+      _configMgr.SetMQTTPass(request->getParam("password", true)->value().c_str());
+      _configMgr.SetMQTTHomeTemperatureTopic(request->getParam("homeTempTopic", true)->value().c_str());
+      _configMgr.SetMQTTOutdoorTemperatureTopic(request->getParam("outdoorTempTopic", true)->value().c_str());
+      request->send(200, "text/plain", "MQTT settings saved. Rebooting...");
+      _shouldReboot = true; });
   _webserver->on("/update", HTTP_POST, [this](AsyncWebServerRequest *request)
                  {
                    if (!request->hasParam("updatePassword", true) || !request->hasParam("updateFile", true, true))

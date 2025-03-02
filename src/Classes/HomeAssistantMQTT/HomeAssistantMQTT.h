@@ -17,6 +17,7 @@ private:
     std::unique_ptr<HAMqtt> _hamqtt;
     std::vector<std::unique_ptr<IMQTTDevice>> _devices;
     std::vector<IMQTTObserver *> _observers;
+    std::vector<const char *> _topics;
 
     // Преобразует строку в массив байтов
     std::vector<byte> stringToByteArray(const std::string &str)
@@ -63,6 +64,13 @@ public:
         {
             device->loop();
         }
+        if(_hamqtt->isConnected() && _topics.size() > 0){
+            for (auto &topic : _topics)
+            {
+                _hamqtt->subscribe(topic);
+            }
+            _topics.clear();
+        }
         _hamqtt->loop();
     }
     void onMqttMessage(const char *topic, const uint8_t *payload, uint16_t length)
@@ -72,13 +80,16 @@ public:
 
     static void onMqttMessageWrapper(void *context, const char *topic, const uint8_t *payload, uint16_t length)
     {
-        // Приводим контекст к типу HomeAssistantMQTT и вызываем метод
         static_cast<HomeAssistantMQTT *>(context)->onMqttMessage(topic, payload, length);
     }
 
     void Subscribe(const char *topic)
     {
-        _hamqtt->subscribe(topic);
+        if(_hamqtt->isConnected()){
+            _hamqtt->subscribe(topic);
+        }else{
+            _topics.push_back(topic);
+        }
     }
 
     void Attach(IMQTTObserver *observer) { _observers.push_back(observer); };

@@ -102,10 +102,9 @@ void loop()
         deviceStates->getConfigMgr()->GetMQTTUser(),
         deviceStates->getConfigMgr()->GetMQTTPass());
     logger.Log("HomeAssistantMQTT initialized");
-    logger.Log("MQTT home test 1");
-    deviceStates->getConfigMgr()->SetMQTTHomeTemperatureTopic("/b5b239/ha/rooms/1/Temperature");
-    logger.Log("MQTT home test 2");
-    tempMgr->SetHomeTemperatureSensor(std::make_unique<HomeTemperature>(logger, std::make_unique<MQTTTemperatureSensor>(haMqtt, deviceStates->getConfigMgr()->GetMQTTHomeTemperatureTopic())));
+    auto homeTempSensor = std::make_unique<MQTTTemperatureSensor>(haMqtt, deviceStates->getConfigMgr()->GetMQTTHomeTemperatureTopic());
+    auto homeTemp = std::make_unique<HomeTemperature>(logger, std::move(homeTempSensor));
+    deviceStates->getTempMgr()->SetHomeTemperatureSensor(std::move(homeTemp));
   }
 
   // Выполняем Loop для haMqtt только после его инициализации

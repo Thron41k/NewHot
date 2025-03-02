@@ -23,10 +23,12 @@ void MQTTTemperatureSensor::MQTTEvent(const char *topic, const uint8_t *payload,
 {
   if (_topic == std::string(topic))
   {
-    Serial.print("Температура в доме: ");
-    Serial.println((char *)payload);
-    _temperature = atof((char *)payload);
-    NotifyObservers(_temperature);
+    float tmp = atof((char *)payload);
+    if (tmp != _temperature)
+    {
+      _temperature = tmp;
+      NotifyObservers(_temperature);
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+//DeviceConfig.h
 #ifndef DEVICECONFIG_H
 #define DEVICECONFIG_H
 
@@ -34,11 +35,11 @@ public:
                 break;
             case MQTTOutdoorTemperatureTopic:
                 strcpy(_config.MQTTOutdoorTemperatureTopic, value);
-                updateNow = false;
+                updateNow = true;
                 break;
             case MQTTHomeTemperatureTopic:
                 strcpy(_config.MQTTHomeTemperatureTopic, value);
-                updateNow = false;
+                updateNow = true;
                 break;
             }
         }

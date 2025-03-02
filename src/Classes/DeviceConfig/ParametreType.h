@@ -1,3 +1,4 @@
+//ParametreType.h
 #ifndef PARAMETRETYPE_H
 #define PARAMETRETYPE_H
 

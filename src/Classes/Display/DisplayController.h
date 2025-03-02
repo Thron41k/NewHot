@@ -38,6 +38,7 @@ public:
   }
 
   void OnTempChanged(float temp) override {
+    Serial.println("DisplayController Temperature changed: " + String(temp));
     if (_displayState == MainScreen) {
       _renderer->RenderBoilerTemp(temp);
     }

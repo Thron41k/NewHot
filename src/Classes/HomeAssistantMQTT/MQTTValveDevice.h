@@ -48,7 +48,6 @@ public:
 
     void Report() override
     {
-        Serial.println("MQTTValveDevice::Report");
         _airValve->setState(_valveManager.GetPercent());
     }
 };
