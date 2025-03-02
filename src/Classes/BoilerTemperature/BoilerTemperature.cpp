@@ -24,7 +24,7 @@ void BoilerTemperature::Loop() {
 
 void BoilerTemperature::NotifyObservers(float temp) {
   for (auto* observer : _observers) {
-    observer->OnBoilerTempChanged(temp);
+    observer->OnTempChanged(temp);
   }
 }
 

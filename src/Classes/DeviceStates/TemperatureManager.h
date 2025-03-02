@@ -6,12 +6,15 @@
 #include "Classes/Helpers/Observers/ITemperatureObserver.h"
 #include "Classes/BoilerTemperature/BoilerTemperature.h"
 #include "DS18B20Sensor.h"
+#include <Classes/HomeTemperature/HomeTemperature.h>
+#include <Classes/HomeAssistantMQTT/MQTTTemperatureSensor.h>
 
 class TemperatureManager : public ITemperatureManager, public ITemperatureObserver
 {
 private:
     Logger _logger;
     std::unique_ptr<BoilerTemperature> _boilerTemp;
+    std::unique_ptr<HomeTemperature> _homeTempSensor;
     float _homeTemp = 0.0;
     float _outdoorTemp = 0.0;
     std::vector<ITemperatureObserver *> _observers;
@@ -37,12 +40,17 @@ public:
     void SetHomeTemp(float temp) { _homeTemp = temp; }
     void SetOutdoorTemp(float temp) { _outdoorTemp = temp; }
 
-    void OnBoilerTempChanged(float temp) override
+    void OnTempChanged(float temp) override
     {
         for (auto *obs : _observers)
         {
-            obs->OnBoilerTempChanged(temp);
+            obs->OnTempChanged(temp);
         }
+    }
+    void SetHomeTemperatureSensor(std::unique_ptr<HomeTemperature> sensor)
+    {
+        _homeTempSensor = std::move(sensor);
+        _homeTempSensor->Attach(this);
     }
 };
 #endif

@@ -1,8 +1,8 @@
-#include <cstdint>
 #ifndef ITEMPERATURE_SENSOR_H
 #define ITEMPERATURE_SENSOR_H
 
-class ITemperatureSensor {
+class ITemperatureSensor
+{
 public:
   virtual bool RequestTemp() = 0;
   virtual bool ReadTemp() = 0;

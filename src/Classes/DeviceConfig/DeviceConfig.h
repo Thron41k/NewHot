@@ -32,6 +32,14 @@ public:
                 strcpy(_config.WIFI_SSID, value);
                 updateNow = true;
                 break;
+            case MQTTOutdoorTemperatureTopic:
+                strcpy(_config.MQTTOutdoorTemperatureTopic, value);
+                updateNow = false;
+                break;
+            case MQTTHomeTemperatureTopic:
+                strcpy(_config.MQTTHomeTemperatureTopic, value);
+                updateNow = false;
+                break;
             }
         }
         else if constexpr (std::is_same<T, std::string>::value)

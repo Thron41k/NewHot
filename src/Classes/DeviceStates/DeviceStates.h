@@ -24,7 +24,7 @@ private:
   void NotifyTempObservers(float temp)
   {
     for (auto *obs : _tempObservers)
-      obs->OnBoilerTempChanged(temp);
+      obs->OnTempChanged(temp);
   }
   void NotifyValveObservers(short percent)
   {

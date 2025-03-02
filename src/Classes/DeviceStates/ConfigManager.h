@@ -34,6 +34,10 @@ public:
   void Loop() override { _config->Loop(); }
   void SetValvePositionPercent(short percent) override { _config->SetParametre(percent, ValvePercent); }
   short GetValvePositionPercent() const override { return _config->GetConfig().valvePercent; }
+  void SetMQTTOutdoorTemperatureTopic(const char* topic) override { _config->SetParametre(topic, MQTTOutdoorTemperatureTopic); }
+  void SetMQTTHomeTemperatureTopic(const char* topic) override { _config->SetParametre(topic, MQTTHomeTemperatureTopic); }
+  std::string GetMQTTOutdoorTemperatureTopic() const override { return _config->GetConfig().MQTTOutdoorTemperatureTopic; }
+  std::string GetMQTTHomeTemperatureTopic() const override { return _config->GetConfig().MQTTHomeTemperatureTopic; }
 };
 
 #endif

@@ -13,7 +13,9 @@ typedef enum {
     MQTT_IP,
     MQTT_Port,
     MQTT_User,
-    MQTT_Pass
+    MQTT_Pass,
+    MQTTHomeTemperatureTopic,
+    MQTTOutdoorTemperatureTopic
   } ParametreType;
 
 #endif

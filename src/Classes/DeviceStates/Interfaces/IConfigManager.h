@@ -27,6 +27,10 @@ class IConfigManager {
       virtual ~IConfigManager() = default;
       virtual void SetValvePositionPercent(short percent) = 0;
       virtual short GetValvePositionPercent() const = 0;
+      virtual void SetMQTTOutdoorTemperatureTopic(const char* topic) = 0;
+      virtual std::string GetMQTTOutdoorTemperatureTopic() const = 0;
+      virtual void SetMQTTHomeTemperatureTopic(const char* topic) = 0;
+      virtual std::string GetMQTTHomeTemperatureTopic() const = 0;
     };
 
 #endif

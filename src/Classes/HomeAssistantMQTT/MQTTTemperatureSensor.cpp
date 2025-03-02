@@ -1,25 +1,46 @@
 #include "MQTTTemperatureSensor.h"
 
-MQTTTemperatureSensor::MQTTTemperatureSensor(HomeAssistantMQTT *mqtt, const std::string &topic): _mqtt(mqtt), _topic(topic), _temperature(0.0)
+void MQTTTemperatureSensor::NotifyObservers(float temp)
 {
-    
+  for (auto *observer : _observers)
+  {
+    observer->OnTempChanged(temp);
+  }
 }
 
-void MQTTTemperatureSensor::NotifyObservers(float temp) {
-    for (auto* observer : _observers) {
-      observer->OnBoilerTempChanged(temp);
-    }
-  }
-  
-  void MQTTTemperatureSensor::Attach(ITemperatureObserver* observer) {
-    _observers.push_back(observer);
-  }
-  
-  void MQTTTemperatureSensor::Detach(ITemperatureObserver* observer) {
-    _observers.erase(std::remove(_observers.begin(), _observers.end(), observer), _observers.end());
-  }
+MQTTTemperatureSensor::MQTTTemperatureSensor(HomeAssistantMQTT *mqtt, const std::string &topic) : _mqtt(mqtt), _topic(topic), _temperature(0.0)
+{
+  _mqtt->Subscribe(_topic.c_str());
+  _mqtt->Attach(this);
+}
 
-  float MQTTTemperatureSensor::GetTemp()
+MQTTTemperatureSensor::~MQTTTemperatureSensor()
+{
+  _mqtt->Detach(this);
+}
+
+void MQTTTemperatureSensor::MQTTEvent(const char *topic, const uint8_t *payload, uint16_t length)
+{
+  if (_topic == std::string(topic))
   {
-      return _temperature;
+    Serial.print("Температура в доме: ");
+    Serial.println((char *)payload);
+    _temperature = atof((char *)payload);
+    NotifyObservers(_temperature);
   }
+}
+
+float MQTTTemperatureSensor::GetTemp()
+{
+  return _temperature;
+}
+
+void MQTTTemperatureSensor::Attach(ITemperatureObserver *observer)
+{
+  _observers.push_back(observer);
+}
+
+void MQTTTemperatureSensor::Detach(ITemperatureObserver *observer)
+{
+  _observers.erase(std::remove(_observers.begin(), _observers.end(), observer), _observers.end());
+}

@@ -37,7 +37,7 @@ public:
     _renderer->RenderMode(_configMgr.GetMode());
   }
 
-  void OnBoilerTempChanged(float temp) override {
+  void OnTempChanged(float temp) override {
     if (_displayState == MainScreen) {
       _renderer->RenderBoilerTemp(temp);
     }

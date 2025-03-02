@@ -14,6 +14,8 @@ struct Configuration {
     char MQTT_User[32] = "";
     char MQTT_Pass[32] = "";
     int MQTT_Port = 1883;
+    char MQTTHomeTemperatureTopic[128] = "";
+    char MQTTOutdoorTemperatureTopic[128] = "";
     IPAddress MQTT_IP = {0, 0, 0, 0};
   };
 
