@@ -1,7 +1,9 @@
+// Classes/Display/DisplayStateEnum.h
 #ifndef DISPLAYSTATEENUM_H
 #define DISPLAYSTATEENUM_H
 
-typedef enum{
+typedef enum
+{
     MainScreen,
     MainScreenModeSelected,
     Menu,

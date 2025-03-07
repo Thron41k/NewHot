@@ -1,4 +1,4 @@
-// IWiFiManager.h
+//Classes/WiFiControl/Interfaces/IWiFiManager.h
 #ifndef IWIFIMANAGER_H
 #define IWIFIMANAGER_H
 

@@ -1,3 +1,4 @@
+//Classes/HomeAssistantMQTT/MQTTTemperatureSensor.cpp
 #include "MQTTTemperatureSensor.h"
 
 void MQTTTemperatureSensor::NotifyObservers(float temp)

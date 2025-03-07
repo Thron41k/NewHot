@@ -1,3 +1,4 @@
+//Classes/WiFiControl/Interfaces/IStatusProvider.h
 #ifndef ISTATUSPROVIDER_H
 #define ISTATUSPROVIDER_H
 

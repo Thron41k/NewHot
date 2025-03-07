@@ -1,4 +1,4 @@
-// WiFiControl.h
+//Classes/WiFiControl/WiFiControl.h
 #ifndef WIFICONTROL_H
 #define WIFICONTROL_H
 

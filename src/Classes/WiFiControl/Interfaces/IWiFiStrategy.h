@@ -1,3 +1,4 @@
+//Classes/WiFiControl/Interfaces/IWiFiStrategy.h
 #ifndef IWIFISTRATEGY_H
 #define IWIFISTRATEGY_H
 

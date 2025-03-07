@@ -1,3 +1,4 @@
+//Classes/HomeAssistantMQTT/MQTTTemperatureSensor.h
 #ifndef MQTT_TEMPERATURE_SENSOR_H
 #define MQTT_TEMPERATURE_SENSOR_H
 

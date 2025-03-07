@@ -1,3 +1,4 @@
+// Classes/DeviceStates/DeviceStates.h
 #ifndef DEVICESTATES_H
 #define DEVICESTATES_H
 
@@ -101,8 +102,10 @@ public:
   void Attach(IConfigObserver *obs) { _configObservers.push_back(obs); }
   ITemperatureManager *getTempMgr() const { return _tempManager.get(); }
   IValveManager *getValveMgr() const { return _valveManager.get(); }
-  IConfigManager *getConfigMgr() const { 
-    return _configManager.get(); }
+  IConfigManager *getConfigMgr() const
+  {
+    return _configManager.get();
+  }
 };
 
 #endif

@@ -1,3 +1,5 @@
+//main.cpp
+
 #include <Arduino.h>
 #include "Classes/Helpers/Logger.h"
 #include "Classes/Input/EncoderControl.h"
@@ -14,7 +16,6 @@
 #include "Classes/WiFiControl/StatusProvider.h"
 #include "Classes/WiFiControl/WebServerControl.h"
 
-// Глобальные объекты (объявление без инициализации)
 Logger logger;
 EncoderControl enc;
 std::unique_ptr<TemperatureManager> tempMgr;

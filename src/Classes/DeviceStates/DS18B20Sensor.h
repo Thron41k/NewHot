@@ -1,3 +1,4 @@
+//Classes/DeviceStates/DS18B20Sensor.h
 #ifndef DS18B20_SENSOR_H
 #define DS18B20_SENSOR_H
 
@@ -11,7 +12,7 @@ private:
     GyverDS18Single _ds;
 
 public:
-    DS18B20Sensor(uint8_t pin) : _ds(pin) {} 
+    DS18B20Sensor(uint8_t pin) : _ds(pin) {}
     bool RequestTemp() override { return _ds.requestTemp(); }
     bool ReadTemp() override { return _ds.readTemp(); }
     float GetTemp() override { return _ds.getTemp(); }

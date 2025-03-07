@@ -1,4 +1,4 @@
-//DeviceConfig.cpp
+// Classes/DeviceConfig/DeviceConfig.cpp
 #include "DeviceConfig.h"
 
 DeviceConfig::DeviceConfig()

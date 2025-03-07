@@ -1,3 +1,4 @@
+// Classes/DeviceStates/Interfaces/IMQTTTemperatureSensor.h
 #ifndef IMQTT_TEMPERATURE_SENSOR_H
 #define IMQTT_TEMPERATURE_SENSOR_H
 

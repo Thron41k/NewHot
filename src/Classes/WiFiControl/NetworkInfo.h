@@ -1,3 +1,4 @@
+//Classes/WiFiControl/NetworkInfo.h
 #ifndef NETWORKINFO_H
 #define NETWORKINFO_H
 

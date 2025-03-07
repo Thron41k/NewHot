@@ -1,3 +1,4 @@
+// Classes/BoilerTemperature/BoilerTemperature.h
 #ifndef BOILER_TEMPERATURE_H
 #define BOILER_TEMPERATURE_H
 
@@ -15,13 +16,13 @@ private:
     std::unique_ptr<ITemperatureSensor> _sensor;
     std::vector<ITemperatureObserver *> _observers;
     void NotifyObservers(float temp);
+
 public:
     BoilerTemperature(Logger logger, std::unique_ptr<ITemperatureSensor> sensor);
     void Loop();
     float GetTemp() const { return _temp; }
     void Attach(ITemperatureObserver *observer);
     void Detach(ITemperatureObserver *observer);
-    
 };
 
 #endif

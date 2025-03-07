@@ -1,3 +1,4 @@
+//Classes/HomeAssistantMQTT/Interfaces/IMQTTDevice.h
 #ifndef IMQTTDEVICE_H
 #define IMQTTDEVICE_H
 

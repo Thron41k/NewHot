@@ -1,3 +1,4 @@
+// Classes/DeviceStates/Interfaces/ITemperatureSensor.h
 #ifndef ITEMPERATURE_SENSOR_H
 #define ITEMPERATURE_SENSOR_H
 

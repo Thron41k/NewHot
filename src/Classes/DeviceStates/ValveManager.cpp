@@ -1,3 +1,4 @@
+// Classes/DeviceStates/ValveManager.cpp
 #include "ValveManager.h"
 
 ValveManager::ValveManager(IConfigManager *configMgr) : _configMgr(configMgr)
@@ -8,7 +9,8 @@ ValveManager::ValveManager(IConfigManager *configMgr) : _configMgr(configMgr)
 void ValveManager::SetPercent(short percent)
 {
     _valve->SetPercentage(percent);
-    if (_configMgr && _configMgr->GetMode() == ModeType::Manual) {
+    if (_configMgr && _configMgr->GetMode() == ModeType::Manual)
+    {
         _configMgr->SetValvePositionPercent(percent);
-      }
+    }
 }

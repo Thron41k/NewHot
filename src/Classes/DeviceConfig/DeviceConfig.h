@@ -1,4 +1,4 @@
-//DeviceConfig.h
+// Classes/DeviceConfig/DeviceConfig.h
 #ifndef DEVICECONFIG_H
 #define DEVICECONFIG_H
 

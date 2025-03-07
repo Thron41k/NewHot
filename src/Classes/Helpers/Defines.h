@@ -1,8 +1,7 @@
+//Classes/Helpers/Defines.h
 #ifndef DEFINES_H
 #define DEFINES_H
 
-//Version   
-//#define FIRMWARE_VERSION "0.1.0+1615469592"
 
 //Pins
 #define STEPPER_IN1 19

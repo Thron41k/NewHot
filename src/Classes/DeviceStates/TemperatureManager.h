@@ -1,4 +1,4 @@
-// TemperatureManager.h
+// Classes/DeviceStates/TemperatureManager.h
 #ifndef TEMPERATURE_MANAGER_H
 #define TEMPERATURE_MANAGER_H
 
